@@ -1,3 +1,4 @@
+using DbUp;
 using Groceries.Common;
 using Groceries.Data;
 using Microsoft.AspNetCore.DataProtection;
@@ -8,11 +9,27 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
 
-var dataDir = builder.Configuration.GetValue<string>("data") ?? env.ContentRootPath;
+var dataDir = builder.Configuration["data"] ?? env.ContentRootPath;
 
 builder.Configuration
     .AddIniFile(Path.Combine(dataDir, "config.ini"), optional: true, reloadOnChange: true)
     .AddIniFile(Path.Combine(dataDir, $"config_{env.EnvironmentName}.ini"), optional: true, reloadOnChange: true);
+
+var dbConn = builder.Configuration["Database"]!;
+EnsureDatabase.For.PostgresqlDatabase(dbConn);
+
+var dbUpgradeResult = DeployChanges.To
+    .PostgresqlDatabase(dbConn)
+    .JournalToPostgresqlTable("public", "__dbup_migrations")
+    .WithScriptsEmbeddedInAssembly(typeof(AppDbContext).Assembly)
+    .WithTransactionPerScript()
+    .Build()
+    .PerformUpgrade();
+
+if (!dbUpgradeResult.Successful)
+{
+    return -1;
+}
 
 var dataProtection = builder.Services.AddDataProtection();
 if (env.IsProduction())
@@ -45,7 +62,7 @@ builder.Services.AddDbContextPool<AppDbContext>(options => options
     .EnableSensitiveDataLogging(env.IsDevelopment())
     .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
     .UseSnakeCaseNamingConvention()
-    .UseNpgsql(builder.Configuration["Database"]!));
+    .UseNpgsql(dbConn));
 
 var app = builder.Build();
 
@@ -56,3 +73,5 @@ app.UseSession();
 app.MapControllers();
 
 app.Run();
+
+return 0;
