@@ -1,0 +1,49 @@
+@using Groceries.Data
+@using Microsoft.EntityFrameworkCore
+
+@model TransactionItem?
+@inject AppDbContext dbContext
+@{
+    var items = await dbContext.Items
+        .OrderBy(item => item.Brand)
+        .ToListAsync();
+
+    var selectedItem = items.SingleOrDefault(item => item.Id == Model?.ItemId);
+}
+
+<fieldset class="form-field">
+    <legend class="form-field__label">Item</legend>
+    <div class="form-field__control input" data-controller="list-filter">
+        <input class="input__control flex-2" name="brand" value="@selectedItem?.Brand" placeholder="Brand" list="itemBrands" autocomplete="off" required autofocus data-action="list-filter#filter" />
+        <input class="input__control flex-5" name="name" value="@selectedItem?.Name" placeholder="Name" list="itemNames" autocomplete="off" required />
+
+        <datalist id="itemBrands">
+            @foreach (var item in items.DistinctBy(item => item.Brand))
+            {
+                <option value="@item.Brand" />
+            }
+        </datalist>
+
+        <datalist id="itemNames">
+            @foreach (var item in items.OrderBy(item => item.Name))
+            {
+                <option value="@item.Name" data-list-filter-target="option" data-list-filter-value="@item.Brand" />
+            }
+        </datalist>
+    </div>
+</fieldset>
+
+<div class="form-field">
+    <label class="form-field__label" for="transactionItemPrice">Price</label>
+    <div class="form-field__control input">
+        @*<span class="input__inset">@CultureInfo.CurrentCulture.NumberFormat.CurrencySymbol</span>*@
+        <input class="input__control" id="transactionItemPrice" name="price" value="@Model?.Price" type="number" min="0" step="0.01" required />
+    </div>
+</div>
+
+<div class="form-field">
+    <label class="form-field__label" for="transactionItemQuantity">Quantity</label>
+    <div class="form-field__control input">
+        <input class="input__control" id="transactionItemQuantity" name="quantity" value="@(Model?.Quantity ?? 1)" type="number" min="1" required />
+    </div>
+</div>

@@ -1,0 +1,41 @@
+@using Groceries.Data;
+@using Microsoft.EntityFrameworkCore;
+
+@inject AppDbContext dbContext
+@{
+    ViewBag.Title = "New Transaction";
+
+    var datetime = DateTime.Now.ToString("s");
+
+    var stores = await dbContext.Stores
+        .OrderBy(store => store.Retailer!.Name)
+        .ThenBy(store => store.Name)
+        .Select(store => new { store.Id, Name = string.Concat(store.Retailer!.Name, " ", store.Name) })
+        .ToListAsync();
+}
+
+<h1>New Transaction</h1>
+
+<form method="post" asp-action="NewTransaction">
+    <div class="form-field">
+        <label class="form-field__label" for="transactionCreatedAt">Date</label>
+        <div class="form-field__control input">
+            <input class="input__control" id="transactionCreatedAt" name="createdAt" type="datetime-local" value="@datetime" max="@datetime" step="1" required autofocus />
+        </div>
+    </div>
+
+    <div class="form-field">
+        <label class="form-field__label" for="transactionStoreId">Store</label>
+        <select class="form-field__control select" id="transactionStoreId" name="storeId" required>
+            @foreach (var store in stores)
+            {
+                <option value="@store.Id">@store.Name</option>
+            }
+        </select>
+    </div>
+
+    <div class="row">
+        <button class="button button--primary" type="submit">Next</button>
+        <a class="button" asp-action="Index">Cancel</a>
+    </div>
+</form>

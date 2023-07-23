@@ -1,0 +1,35 @@
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Http.Extensions;
+
+@{
+    ViewBag.Title = "New Store";
+
+    var returnUrl = Url.Action("Index", new { page = 1 });
+    if (Context.Request.GetTypedHeaders().Referer is Uri referer && referer.Host == Context.Request.Host.Host)
+    {
+        var requestUrl = new UriBuilder
+        {
+            Scheme = Context.Request.Scheme,
+            Host = Context.Request.Host.Host,
+            Port = Context.Request.Host.Port.GetValueOrDefault(-1),
+            Path = Context.Request.Path.ToString(),
+            Query = Context.Request.QueryString.ToString(),
+        }.Uri;
+
+        if (referer != requestUrl)
+        {
+            returnUrl = referer.PathAndQuery;
+        }
+    }
+}
+
+<h1>New Store</h1>
+
+<form method="post" asp-action="NewStore">
+    <partial name="_StoreForm" />
+
+    <div class="row">
+        <button class="button button--primary">Save</button>
+        <a class="button" href="@returnUrl">Cancel</a>
+    </div>
+</form>

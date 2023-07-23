@@ -1,0 +1,56 @@
+@using Groceries.Data;
+@using Microsoft.EntityFrameworkCore;
+
+@model Transaction
+@inject AppDbContext dbContext
+@{
+    ViewBag.Title = "New Transaction";
+
+    var store = await dbContext.Stores
+        .Where(store => store.Id == Model.StoreId)
+        .Select(store => string.Concat(store.Retailer!.Name, " ", store.Name))
+        .SingleAsync();
+
+    var itemIds = Model.Items.Select(item => item.ItemId);
+    var items = await dbContext.Items
+        .Where(item => itemIds.Contains(item.Id))
+        .Select(item => new { item.Id, Name = string.Concat(item.Brand, " ", item.Name) })
+        .ToListAsync();
+}
+
+<h1>New Transaction</h1>
+
+<div>@Model.CreatedAt.ToShortDateString() @Model.CreatedAt.ToLongTimeString() &ndash; @store</div>
+
+<form method="post" asp-action="NewTransactionItems">
+    <div class="card">
+        <div class="card__header row">
+            <h2 class="row__fill">Items</h2>
+            <a class="button button--primary" asp-action="NewTransactionItem" autofocus data-turbo-frame="modal">New item</a>
+        </div>
+
+        <div class="card__content">
+            <ul>
+                @foreach (var item in Model.Items)
+                {
+                    <li class="row">
+                        <span class="row__fill">@items.Single(i => i.Id == item.ItemId).Name</span>
+                        <span>@item.Price.ToString("c")</span>
+                        <span>@item.Quantity</span>
+                        <span>@((item.Price * item.Quantity).ToString("c"))</span>
+                        <a class="link" asp-action="EditTransactionItem" asp-route-id="@item.ItemId" data-turbo-frame="modal">Edit</a>
+                    </li>
+                }
+            </ul>
+        </div>
+
+        <div class="card__footer">
+            Total: @Model.Items.Sum(item => item.Price * item.Quantity).ToString("c")
+        </div>
+    </div>
+
+    <div class="row">
+        <button class="button button--primary" type="submit">Save</button>
+        <a class="button" asp-action="Index">Cancel</a>
+    </div>
+</form>

@@ -1,0 +1,9 @@
+<turbo-frame id="modal" data-modal-target="frame">
+    <article class="card">
+        <header class="card__header row">
+            <h2 class="row__fill">@ViewBag.Title</h2>
+            <button class="button modal__close-button" data-action="modal#close">&#x1F5D9;</button>
+        </header>
+        @RenderBody()
+    </article>
+</turbo-frame>

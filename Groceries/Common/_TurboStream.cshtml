@@ -1,0 +1,12 @@
+<turbo-stream action="@ViewBag.Action" target="@ViewBag.Target">
+    @if (ViewBag.Action != "remove")
+    {
+        <template>
+            @RenderBody()
+        </template>
+    }
+    else
+    {
+        IgnoreBody();
+    }
+</turbo-stream>

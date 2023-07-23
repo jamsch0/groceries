@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32014.148
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Groceries", "Groceries\Groceries.csproj", "{C370C8DD-B7A0-46F9-8AA0-569D7D98B354}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Groceries.Data", "Groceries.Data\Groceries.Data.csproj", "{4B8D5F1B-0F09-4626-A598-1400BF985637}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D3B5FF09-44D2-491B-9663-0962BE0D1EBE}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C370C8DD-B7A0-46F9-8AA0-569D7D98B354}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C370C8DD-B7A0-46F9-8AA0-569D7D98B354}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C370C8DD-B7A0-46F9-8AA0-569D7D98B354}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C370C8DD-B7A0-46F9-8AA0-569D7D98B354}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B8D5F1B-0F09-4626-A598-1400BF985637}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B8D5F1B-0F09-4626-A598-1400BF985637}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B8D5F1B-0F09-4626-A598-1400BF985637}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B8D5F1B-0F09-4626-A598-1400BF985637}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BA46DEBB-75D8-4AFD-B07C-8B3F89820BF0}
+	EndGlobalSection
+EndGlobal

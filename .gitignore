@@ -1,0 +1,7 @@
+.vs/
+**/bin/
+**/obj/
+*.csproj.user
+
+Groceries/wwwroot/lib/
+Groceries/config_development.ini

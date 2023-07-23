@@ -1,0 +1,14 @@
+{
+    "version": "1.0",
+    "defaultProvider": "unpkg",
+    "libraries": [
+        {
+            "library": "@hotwired/turbo@7.3.0",
+            "destination": "wwwroot/lib/hotwired/turbo/"
+        },
+        {
+            "library": "@hotwired/stimulus@3.2.1",
+            "destination": "wwwroot/lib/hotwired/stimulus/"
+        }
+    ]
+}
