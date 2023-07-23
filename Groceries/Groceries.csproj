@@ -6,6 +6,9 @@
         <Nullable>enable</Nullable>
         <WarningsAsErrors>nullable</WarningsAsErrors>
         <AnalysisMode>recommended</AnalysisMode>
+
+        <PublishRelease>true</PublishRelease>
+        <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     </PropertyGroup>
 
     <ItemGroup>
@@ -16,10 +19,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Groceries.Data\Groceries.Data.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <None Update="config.ini" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
 </Project>

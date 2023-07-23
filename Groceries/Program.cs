@@ -1,14 +1,24 @@
 using Groceries.Common;
 using Groceries.Data;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+var env = builder.Environment;
+
+var dataDir = builder.Configuration.GetValue<string>("data") ?? env.ContentRootPath;
 
 builder.Configuration
-    .AddIniFile("config.ini", optional: true, reloadOnChange: true)
-    .AddIniFile($"config_{builder.Environment.EnvironmentName}.ini", optional: true, reloadOnChange: true);
+    .AddIniFile(Path.Combine(dataDir, "config.ini"), optional: true, reloadOnChange: true)
+    .AddIniFile(Path.Combine(dataDir, $"config_{env.EnvironmentName}.ini"), optional: true, reloadOnChange: true);
+
+var dataProtection = builder.Services.AddDataProtection();
+if (env.IsProduction())
+{
+    dataProtection.PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(dataDir, "keys")));
+}
 
 var mvc = builder.Services
     .AddControllersWithViews()
@@ -20,7 +30,7 @@ var mvc = builder.Services
     })
     .AddSessionStateTempDataProvider();
 
-if (builder.Environment.IsDevelopment())
+if (env.IsDevelopment())
 {
     mvc.AddRazorRuntimeCompilation();
 }
@@ -31,8 +41,8 @@ builder.Services.AddSession();
 builder.Services.AddSingleton<IActionResultExecutor<TurboStreamResult>, TurboStreamResultExecutor>();
 
 builder.Services.AddDbContextPool<AppDbContext>(options => options
-    .EnableDetailedErrors(builder.Environment.IsDevelopment())
-    .EnableSensitiveDataLogging(builder.Environment.IsDevelopment())
+    .EnableDetailedErrors(env.IsDevelopment())
+    .EnableSensitiveDataLogging(env.IsDevelopment())
     .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
     .UseSnakeCaseNamingConvention()
     .UseNpgsql(builder.Configuration["Database"]!));
