@@ -88,17 +88,14 @@ public class TransactionsController : Controller
     }
 
     [HttpPost("new/items")]
-    public async Task<IActionResult> PostNewTransactionItems()
+    public IActionResult PostNewTransactionItems()
     {
-        if (TempData["NewTransaction"] is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
+        if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
         {
             return RedirectToAction(nameof(NewTransaction));
         }
 
-        dbContext.Transactions.Add(transaction);
-        await dbContext.SaveChangesAsync();
-
-        return RedirectToAction(nameof(Index), new { page = 1 });
+        return RedirectToAction(nameof(NewTransactionPromotions));
     }
 
     [HttpGet("new/items/new")]
@@ -186,26 +183,17 @@ public class TransactionsController : Controller
             .Select(item => item.Id)
             .SingleOrDefaultAsync();
 
-        if (itemId == transactionItem.ItemId)
+        if (itemId == default)
         {
-            transactionItem.Price = price;
-            transactionItem.Quantity = quantity;
+            var item = new Item(brand, name);
+            dbContext.Items.Add(item);
+            await dbContext.SaveChangesAsync();
+            itemId = item.Id;
         }
-        else
-        {
-            if (itemId == default)
-            {
-                var item = new Item(brand, name);
-                dbContext.Items.Add(item);
-                await dbContext.SaveChangesAsync();
-                itemId = item.Id;
-            }
 
-            transaction.Items.Remove(transactionItem);
-
-            transactionItem = new TransactionItem(itemId, price, quantity);
-            transaction.Items.Add(transactionItem);
-        }
+        transactionItem.ItemId = itemId;
+        transactionItem.Price = price;
+        transactionItem.Quantity = quantity;
 
         TempData["NewTransaction"] = JsonSerializer.Serialize(transaction);
 
@@ -233,5 +221,132 @@ public class TransactionsController : Controller
         return Request.IsTurboFrameRequest("modal")
             ? NoContent()
             : RedirectToAction(nameof(NewTransactionItems));
+    }
+
+    [HttpGet("new/promotions")]
+    public IActionResult NewTransactionPromotions()
+    {
+        if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
+        {
+            return RedirectToAction(nameof(NewTransaction));
+        }
+
+        return View(transaction);
+    }
+
+    [HttpPost("new/promotions")]
+    public async Task<IActionResult> PostNewTransactionPromotions()
+    {
+        if (TempData["NewTransaction"] is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
+        {
+            return RedirectToAction(nameof(NewTransaction));
+        }
+
+        // Work around EF trying to insert items by explicitly tracking them as unchanged
+        dbContext.Items.AttachRange(transaction.Promotions.SelectMany(promotion => promotion.Items));
+
+        dbContext.Transactions.Add(transaction);
+        await dbContext.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Index), new { page = 1 });
+    }
+
+    [HttpGet("new/promotions/new")]
+    public IActionResult NewTransactionPromotion()
+    {
+        if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
+        {
+            return RedirectToAction(nameof(NewTransaction));
+        }
+
+        return Request.IsTurboFrameRequest("modal")
+            ? View($"{nameof(NewTransactionPromotion)}_Modal", transaction)
+            : View(transaction);
+    }
+
+    [HttpPost("new/promotions/new")]
+    public IActionResult NewTransactionPromotion(string name, decimal amount, Guid[] itemIds)
+    {
+        if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
+        {
+            return RedirectToAction(nameof(NewTransaction));
+        }
+
+        // TODO: Handle promotion already in transaction - merge, replace, error?
+
+        var promotion = new TransactionPromotion(name, amount) { Items = itemIds.Select(id => new Item(id)).ToArray() };
+        transaction.Promotions.Add(promotion);
+
+        TempData["NewTransaction"] = JsonSerializer.Serialize(transaction);
+
+        return Request.IsTurboFrameRequest("modal")
+            ? NoContent()
+            : RedirectToAction(nameof(NewTransactionPromotions));
+    }
+
+    [HttpGet("new/promotions/edit/{id}")]
+    public IActionResult EditTransactionPromotion(Guid id)
+    {
+        if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
+        {
+            return RedirectToAction(nameof(NewTransaction));
+        }
+
+        var promotion = transaction.Promotions.SingleOrDefault(promotion => promotion.Id == id);
+        if (promotion == null)
+        {
+            return RedirectToAction(nameof(NewTransactionPromotions));
+        }
+
+        var model = (transaction, promotion);
+        return Request.IsTurboFrameRequest("modal")
+            ? View($"{nameof(EditTransactionPromotion)}_Modal", model)
+            : View(model);
+    }
+
+    [HttpPost("new/promotions/edit/{id}")]
+    public IActionResult EditTransactionPromotion(Guid id, string name, decimal amount, Guid[] itemIds)
+    {
+        if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
+        {
+            return RedirectToAction(nameof(NewTransaction));
+        }
+
+        var promotion = transaction.Promotions.SingleOrDefault(promotion => promotion.Id == id);
+        if (promotion == null)
+        {
+            return RedirectToAction(nameof(NewTransactionPromotions));
+        }
+
+        promotion.Name = name;
+        promotion.Amount = amount;
+        promotion.Items = itemIds.Select(id => new Item(id)).ToArray();
+
+        TempData["NewTransaction"] = JsonSerializer.Serialize(transaction);
+
+        return Request.IsTurboFrameRequest("modal")
+            ? NoContent()
+            : RedirectToAction(nameof(NewTransactionPromotions));
+    }
+
+    [HttpPost("new/promotions/delete/{id}")]
+    public IActionResult DeleteTransactionPromotion(Guid id)
+    {
+        if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
+        {
+            return RedirectToAction(nameof(NewTransaction));
+        }
+
+        var promotion = transaction.Promotions.SingleOrDefault(promotion => promotion.Id == id);
+        if (promotion != null)
+        {
+            transaction.Promotions.Remove(promotion);
+        }
+
+        TempData["NewTransaction"] = JsonSerializer.Serialize(transaction);
+
+        return Request.IsTurboFrameRequest("modal")
+            ? NoContent()
+            : RedirectToAction(nameof(NewTransactionPromotions));
     }
 }

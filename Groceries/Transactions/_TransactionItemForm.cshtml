@@ -6,7 +6,8 @@
 @{
     var items = await dbContext.Items
         .OrderBy(item => item.Brand)
-        .ToListAsync();
+        .ThenBy(item => item.Name)
+        .ToArrayAsync();
 
     var selectedItem = items.SingleOrDefault(item => item.Id == Model?.ItemId);
 }
@@ -25,7 +26,7 @@
         </datalist>
 
         <datalist id="itemNames">
-            @foreach (var item in items.OrderBy(item => item.Name))
+            @foreach (var item in items)
             {
                 <option value="@item.Name" data-list-filter-target="option" data-list-filter-value="@item.Brand" />
             }

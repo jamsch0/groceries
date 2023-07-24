@@ -1,0 +1,20 @@
+@using Groceries.Data
+
+@model (Transaction Transaction, TransactionPromotion Promotion)
+@{
+    Layout = "_Modal";
+    ViewBag.Title = "Edit Transaction Promotion";
+}
+
+<form class="card__content" id="editTransactionPromotion" method="post" asp-action="EditTransactionPromotion" data-action="turbo:submit-end->modal#close">
+    <partial name="_TransactionPromotionForm" model="Model" />
+</form>
+
+<form id="deleteTransactionPromotion" method="post" asp-action="DeleteTransactionPromotion" asp-route-id="@Model.Promotion.Id" data-action="turbo:submit-end->modal#close"></form>
+
+<footer class="card__footer card__footer--shaded row">
+    <button class="button button--primary" type="submit" form="editTransactionPromotion">Update</button>
+    <button class="button" data-action="modal#close">Cancel</button>
+    <span class="row__fill"></span>
+    <button class="button button--danger" type="submit" form="deleteTransactionPromotion">Remove</button>
+</footer>

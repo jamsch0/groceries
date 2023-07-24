@@ -1,0 +1,32 @@
+@using Groceries.Data;
+@using Microsoft.EntityFrameworkCore;
+
+@model (Transaction Transaction, TransactionPromotion Promotion)
+@inject AppDbContext dbContext
+@{
+    ViewBag.Title = "Edit Transaction Promotion";
+
+    var store = await dbContext.Stores
+        .Where(store => store.Id == Model.Transaction.StoreId)
+        .Select(store => string.Concat(store.Retailer!.Name, " ", store.Name))
+        .SingleAsync();
+}
+
+<h1>Edit Transaction Promotion</h1>
+
+<div class="form-field">
+    @Model.Transaction.CreatedAt.ToShortDateString() @Model.Transaction.CreatedAt.ToShortTimeString() &ndash; @store
+</div>
+
+<form id="editTransactionPromotion" method="post" asp-action="EditTransactionPromotion">
+    <partial name="_TransactionPromotionForm" model="Model" />
+</form>
+
+<form id="deleteTransactionPromotion" method="post" asp-action="DeleteTransactionPromotion" asp-route-id="@Model.Promotion.Id"></form>
+
+<div class="row">
+    <button class="button button--primary" type="submit" form="editTransactionPromotion">Update</button>
+    <a class="button" asp-action="NewTransactionPromotions">Cancel</a>
+    <span class="row__fill"></span>
+    <button class="button button--danger" type="submit" form="deleteTransactionPromotion">Remove</button>
+</div>

@@ -18,9 +18,11 @@ public class TransactionItem
     }
 
     public Guid TransactionId { get; init; }
-    public Guid ItemId { get; init; }
+    public Guid ItemId { get; set; }
     public decimal Price { get; set; }
     public int Quantity { get; set; }
 
     public Item? Item { get; init; }
+
+    public decimal Amount => Price * Quantity;
 }

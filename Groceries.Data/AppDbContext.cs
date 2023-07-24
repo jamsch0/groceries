@@ -1,5 +1,6 @@
 namespace Groceries.Data;
 
+using Humanizer;
 using Microsoft.EntityFrameworkCore;
 
 public class AppDbContext : DbContext
@@ -81,7 +82,8 @@ public class AppDbContext : DbContext
 
             entity.HasMany(e => e.Items)
                 .WithMany(e => e.TransactionPromotions)
-                .UsingEntity<TransactionPromotionItem>();
+                .UsingEntity<TransactionPromotionItem>()
+                .ToTable("transaction_promotion_items");
         });
 
         modelBuilder.Entity<TransactionTotal>(entity =>
@@ -95,7 +97,7 @@ public class AppDbContext : DbContext
             var idProperty = entity.FindProperty("Id");
             if (idProperty != null)
             {
-                idProperty.SetColumnName($"{entity.ClrType.Name.ToLowerInvariant()}_id");
+                idProperty.SetColumnName($"{entity.ClrType.Name.Underscore().ToLowerInvariant()}_id");
                 idProperty.SetDefaultValueSql(string.Empty);
             }
         }

@@ -1,0 +1,38 @@
+@using Groceries.Data
+@using Microsoft.EntityFrameworkCore
+
+@model (Transaction Transaction, TransactionPromotion? Promotion)
+@inject AppDbContext dbContext
+@{
+    var selectedItemIds = Model.Promotion?.Items.Select(item => item.Id).ToArray() ?? Array.Empty<Guid>();
+
+    var itemIds = Model.Transaction.Items.Select(item => item.ItemId);
+    var itemNames = await dbContext.Items
+        .Where(item => itemIds.Contains(item.Id))
+        .ToDictionaryAsync(item => item.Id, item => string.Concat(item.Brand, " ", item.Name));
+}
+
+<div class="form-field">
+    <label class="form-field__label" for="transactionPromotionName">Name</label>
+    <div class="form-field__control input">
+        <input class="input__control" id="transactionPromotionName" name="name" value="@Model.Promotion?.Name" required autofocus />
+    </div>
+</div>
+
+<div class="form-field">
+    <label class="form-field__label" for="transactionPromotionAmount">Amount</label>
+    <div class="form-field__control input">
+        @*<span class="input__inset">@CultureInfo.CurrentCulture.NumberFormat.CurrencySymbol</span>*@
+        <input class="input__control" id="transactionPromotionAmount" name="amount" value="@Model.Promotion?.Amount" type="number" min="0" step="0.01" required />
+    </div>
+</div>
+
+<div class="form-field">
+    <label class="form-field__label" for="transactionPromotionItemIds">Items</label>
+    <select class="form-field__control select" id="transactionPromotionItemIds" name="itemIds" multiple required>
+        @foreach (var item in Model.Transaction.Items)
+        {
+            <option value="@item.ItemId" selected="@selectedItemIds.Contains(item.ItemId)">@itemNames[item.ItemId]</option>
+        }
+    </select>
+</div>

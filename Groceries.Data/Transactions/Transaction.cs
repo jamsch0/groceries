@@ -24,4 +24,6 @@ public class Transaction
     public ICollection<TransactionPromotion> Promotions { get; init; } = new List<TransactionPromotion>();
 
     public Store? Store { get; init; }
+
+    public decimal Total => Items.Sum(item => item.Price * item.Quantity) - Promotions.Sum(promotion => promotion.Amount);
 }

@@ -1,7 +1,10 @@
 namespace Groceries.Data;
 
+using System.Text.Json.Serialization;
+
 public class Item
 {
+    [JsonConstructor]
     public Item(Guid id, string brand, string name)
     {
         Id = id;
