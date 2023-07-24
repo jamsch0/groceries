@@ -14,7 +14,7 @@
 
 <h1>New Transaction Item</h1>
 
-<div>@Model.CreatedAt.ToShortDateString() @Model.CreatedAt.ToShortTimeString() &ndash; @store</div>
+<div class="form-field">@Model.CreatedAt.ToShortDateString() @Model.CreatedAt.ToShortTimeString() &ndash; @store</div>
 
 <form method="post" asp-action="NewTransactionItem">
     <partial name="_TransactionItemForm" model="null" />
