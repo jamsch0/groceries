@@ -301,6 +301,11 @@ html:has(.modal[open]) {
     margin: 1.5rem;
 }
 
+.card__content--table {
+    border-top: 1px solid rgb(229, 231, 235);
+    margin: -1px 0 0 0;
+}
+
 .card__header {
     border-bottom: 1px solid rgb(243, 244, 246);
     padding: 1.25rem 1.5rem;
@@ -324,13 +329,12 @@ html:has(.modal[open]) {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 
-.table table {
+.table table, .card__content--table table {
     min-width: 100%;
     border-collapse: collapse;
 }
 
 .table__header {
-    background-color: rgb(249, 250, 251);
     color: rgb(107, 114, 128);
     font-size: 0.75rem;
     font-weight: 500;
@@ -340,6 +344,10 @@ html:has(.modal[open]) {
     text-transform: uppercase;
     padding: 0.75rem 1.5rem;
     white-space: nowrap;
+}
+
+.table__header--shaded {
+    background-color: rgb(249, 250, 251);
 }
 
 .table__header--sortable a {
@@ -373,12 +381,22 @@ html:has(.modal[open]) {
     white-space: nowrap;
 }
 
+.table__cell--compact {
+    line-height: 1rem;
+    padding-block: 0.75rem;
+}
+
 .table__cell--icon {
     font-size: 1.25rem;
 }
 
 .table__cell--numeric {
     text-align: end;
+}
+
+.table__cell--total {
+    font-weight: 600;
+    text-transform: uppercase;
 }
 
 .table__paginator {

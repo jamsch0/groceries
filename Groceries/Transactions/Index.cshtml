@@ -43,23 +43,23 @@
     <table>
         <thead>
             <tr>
-                <th scope="col" class="table__header table__header--sortable">
+                <th scope="col" class="table__header table__header--shaded table__header--sortable">
                     <a asp-route-sort="@(GetNextSortDir("date") != null ? "date" : "")" asp-route-dir="@GetNextSortDir("date")" asp-route-page="1" data-dir="@GetSortDir("date")">
                         Date
                     </a>
                 </th>
-                <th scope="col" class="table__header" style="width: 100%">Store</th>
-                <th scope="col" class="table__header table__header--sortable">
+                <th scope="col" class="table__header table__header--shaded" style="width: 100%">Store</th>
+                <th scope="col" class="table__header table__header--shaded table__header--sortable">
                     <a asp-route-sort="@(GetNextSortDir("items") != null ? "items" : "")" asp-route-dir="@GetNextSortDir("items")" asp-route-page="1" data-dir="@GetSortDir("items")">
                         Items
                     </a>
                 </th>
-                <th scope="col" class="table__header table__header--sortable">
+                <th scope="col" class="table__header table__header--shaded table__header--sortable">
                     <a asp-route-sort="@(GetNextSortDir("amount") != null ? "amount" : "")" asp-route-dir="@GetNextSortDir("amount")" asp-route-page="1" data-dir="@GetSortDir("amount")">
                         Amount
                     </a>
                 </th>
-                @*<th scope="col" class="table__header"></th>*@
+                @*<th scope="col" class="table__header table__header--shaded"></th>*@
             </tr>
         </thead>
         <tbody>
