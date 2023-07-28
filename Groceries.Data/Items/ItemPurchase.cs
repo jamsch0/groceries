@@ -8,6 +8,7 @@ public class ItemPurchase
     public Guid StoreId { get; init; }
     public decimal Price { get; init; }
     public int Quantity { get; init; }
+    public bool IsLastPurchase { get; init; }
 
     public Item? Item { get; init; }
     public Transaction? Transaction { get; init; }

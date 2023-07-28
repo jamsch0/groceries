@@ -25,19 +25,11 @@ public class ItemsController : Controller
             itemsQuery = itemsQuery.Where(item => EF.Functions.ILike(item.Brand + ' '  + item.Name, searchPattern));
         }
 
-        var lastPurchasesQuery = dbContext.ItemPurchases
-            .GroupBy(purchase => purchase.ItemId)
-            .Select(purchases => new
-            {
-                ItemId = purchases.Key,
-                CreatedAt = purchases.Max(purchase => purchase.CreatedAt),
-            });
-
         var items = await itemsQuery
             .OrderBy(item => item.Brand)
             .ThenBy(item => item.Name)
             .GroupJoin(
-                lastPurchasesQuery,
+                dbContext.ItemPurchases.Where(purchase => purchase.IsLastPurchase),
                 item => item.Id,
                 lastPurchase => lastPurchase.ItemId,
                 (item, lastPurchase) => new { item, lastPurchase })

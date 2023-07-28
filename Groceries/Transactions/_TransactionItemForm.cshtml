@@ -7,44 +7,61 @@
     var items = await dbContext.Items
         .OrderBy(item => item.Brand)
         .ThenBy(item => item.Name)
+        .GroupJoin(
+            dbContext.ItemPurchases.Where(purchase => purchase.IsLastPurchase),
+            item => item.Id,
+            lastPurchase => lastPurchase.ItemId,
+            (item, lastPurchase) => new { item, lastPurchase })
+        .SelectMany(
+            group => group.lastPurchase.DefaultIfEmpty(),
+            (group, lastPurchase) => new
+            {
+                group.item.Id,
+                group.item.Brand,
+                group.item.Name,
+                Price = lastPurchase != null ? lastPurchase.Price : (decimal?)null,
+                Quantity = lastPurchase != null ? lastPurchase.Quantity : (int?)null,
+            })
         .ToArrayAsync();
 
     var selectedItem = items.SingleOrDefault(item => item.Id == Model?.ItemId);
 }
 
-<fieldset class="form-field">
-    <legend class="form-field__label">Item</legend>
-    <div class="form-field__control input" data-controller="list-filter">
-        <input class="input__control flex-2" name="brand" value="@selectedItem?.Brand" placeholder="Brand" list="itemBrands" autocomplete="off" required autofocus data-action="list-filter#filter" />
-        <input class="input__control flex-5" name="name" value="@selectedItem?.Name" placeholder="Name" list="itemNames" autocomplete="off" required />
+<div data-controller="transaction-item-form">
+    <fieldset class="form-field">
+        <legend class="form-field__label">Item</legend>
+        <div class="form-field__control input">
+            <input class="input__control flex-2" name="brand" value="@selectedItem?.Brand" placeholder="Brand" list="itemBrands" autocomplete="off" required autofocus data-action="transaction-item-form#filterNames transaction-item-form#setPriceAndQuantity" />
+            <input class="input__control flex-5" name="name" value="@selectedItem?.Name" placeholder="Name" list="itemNames" autocomplete="off" required data-action="transaction-item-form#setPriceAndQuantity" />
 
-        <datalist id="itemBrands">
-            @foreach (var item in items.DistinctBy(item => item.Brand))
-            {
-                <option value="@item.Brand" />
-            }
-        </datalist>
+            <datalist id="itemBrands">
+                @foreach (var item in items.DistinctBy(item => item.Brand))
+                {
+                    <option value="@item.Brand" />
+                }
+            </datalist>
 
-        <datalist id="itemNames">
-            @foreach (var item in items)
-            {
-                <option value="@item.Name" data-list-filter-target="option" data-list-filter-value="@item.Brand" />
-            }
-        </datalist>
+            <datalist id="itemNames">
+                @foreach (var item in items)
+                {
+                    <option value="@item.Name" data-transaction-item-form-target="option" data-brand="@item.Brand" data-price="@item.Price" data-quantity="@item.Quantity" />
+                }
+            </datalist>
+        </div>
+    </fieldset>
+
+    <div class="form-field">
+        <label class="form-field__label" for="transactionItemPrice">Price</label>
+        <div class="form-field__control input">
+            @*<span class="input__inset">@CultureInfo.CurrentCulture.NumberFormat.CurrencySymbol</span>*@
+            <input class="input__control" id="transactionItemPrice" name="price" value="@Model?.Price" type="number" min="0" step="0.01" required data-transaction-item-form-target="price" />
+        </div>
     </div>
-</fieldset>
 
-<div class="form-field">
-    <label class="form-field__label" for="transactionItemPrice">Price</label>
-    <div class="form-field__control input">
-        @*<span class="input__inset">@CultureInfo.CurrentCulture.NumberFormat.CurrencySymbol</span>*@
-        <input class="input__control" id="transactionItemPrice" name="price" value="@Model?.Price" type="number" min="0" step="0.01" required />
-    </div>
-</div>
-
-<div class="form-field">
-    <label class="form-field__label" for="transactionItemQuantity">Quantity</label>
-    <div class="form-field__control input">
-        <input class="input__control" id="transactionItemQuantity" name="quantity" value="@(Model?.Quantity ?? 1)" type="number" min="1" required />
+    <div class="form-field">
+        <label class="form-field__label" for="transactionItemQuantity">Quantity</label>
+        <div class="form-field__control input">
+            <input class="input__control" id="transactionItemQuantity" name="quantity" value="@(Model?.Quantity ?? 1)" type="number" min="1" required data-transaction-item-form-target="quantity" />
+        </div>
     </div>
 </div>
