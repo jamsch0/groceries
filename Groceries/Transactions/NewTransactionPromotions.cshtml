@@ -46,7 +46,7 @@
                                 @promotion.Items.Sum(item => Model.Items.Single(i => i.ItemId == item.Id).Quantity)
                             </td>
                             <td class="table__cell table__cell--compact table__cell--numeric">
-                                @(-promotion.Amount)
+                                @((-promotion.Amount).ToString("c"))
                             </td>
                             <td class="table__cell table__cell--compact">
                                 <a class="link" asp-action="EditTransactionPromotion" asp-route-id="@promotion.Id" data-turbo-frame="modal">Edit</a>
