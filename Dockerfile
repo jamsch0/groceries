@@ -9,6 +9,9 @@ FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine AS base
 WORKDIR /groceries
 COPY --from=build /out .
 COPY --from=build /src/Groceries/config.ini /config/
-VOLUME /config
+RUN apk add --no-cache icu-libs tzdata
 ENV DOTNET_ENABLEDIAGNOSTICS=0
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+EXPOSE 80
+VOLUME /config
 ENTRYPOINT ["./Groceries", "--data", "/config"]

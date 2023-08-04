@@ -7,7 +7,7 @@ The default configuration can be found in `config.ini` once the volume has been 
 
 Example usage:
 ```bash
-$ docker run -d -p 8080:80 -v ./groceries:/config ghcr.io/jamsch0/groceries
+$ docker run -d -p 8080:80 -e LANG=en_GB TZ=Europe/London -v ./groceries:/config ghcr.io/jamsch0/groceries
 ```
 
 ## Configuration
