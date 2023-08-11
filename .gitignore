@@ -1,6 +1,5 @@
 .vs/
-**/bin/
-**/obj/
+artifacts/
 *.csproj.user
 
 Groceries/wwwroot/lib/

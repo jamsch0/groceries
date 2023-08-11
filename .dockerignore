@@ -2,8 +2,7 @@
 .github/
 .vs/
 .vscode/
-**/bin/
-**/obj/
+artifacts/
 *.csproj.user
 
 Groceries/wwwroot/lib/

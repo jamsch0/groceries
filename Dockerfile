@@ -5,6 +5,8 @@ COPY ./.config ./
 RUN dotnet tool restore
 
 COPY ./Groceries.sln ./
+COPY ./Directory.Build.props ./
+
 COPY */*.csproj ./
 RUN for file in $(ls *.csproj); do mkdir -p ${file%.*} && mv $file ${file%.*}; done
 RUN dotnet restore
