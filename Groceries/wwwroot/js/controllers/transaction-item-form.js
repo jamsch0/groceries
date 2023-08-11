@@ -32,7 +32,7 @@ export default class TransactionItemFormController extends Controller {
                 this.priceTarget.value = option.getAttribute("data-price");
             }
             if (!this.quantityTarget.value || this.quantityTarget.value === "1") {
-                this.quantityTarget.value = option.getAttribute("data-quantity");
+                this.quantityTarget.value = option.getAttribute("data-quantity") || "1";
             }
         }
     }
