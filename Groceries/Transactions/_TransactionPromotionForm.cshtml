@@ -28,8 +28,11 @@
 </div>
 
 <div class="form-field">
-    <label class="form-field__label" for="transactionPromotionItemIds">Items</label>
-    <select class="form-field__control select" id="transactionPromotionItemIds" name="itemIds" multiple required>
+    <label class="form-field__label" for="transactionPromotionItemIds">
+        Items
+        <span class="form-field__corner-hint">Optional</span>
+    </label>
+    <select class="form-field__control select" id="transactionPromotionItemIds" name="itemIds" multiple>
         @foreach (var item in Model.Transaction.Items)
         {
             <option value="@item.ItemId" selected="@selectedItemIds.Contains(item.ItemId)">@itemNames[item.ItemId]</option>
