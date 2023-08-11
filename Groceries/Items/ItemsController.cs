@@ -37,7 +37,7 @@ public class ItemsController : Controller
                 group => group.lastPurchase.DefaultIfEmpty(),
                 (group, lastPurchase) => new ItemListModel.Item(group.item.Id, group.item.Brand, group.item.Name)
                 {
-                    HasBarcode = group.item.Barcodes.Any(),
+                    HasBarcode = group.item.Barcodes.Count != 0,
                     LastPurchasedAt = lastPurchase != null ? lastPurchase.CreatedAt : null,
                 })
             .ToListPageModelAsync(page, cancellationToken: HttpContext.RequestAborted);
