@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:7.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 WORKDIR /src
 
 COPY ./.config ./
@@ -16,7 +16,7 @@ RUN dotnet libman restore
 COPY . ../
 RUN dotnet publish --no-restore --output /out
 
-FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine AS base
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine-composite AS base
 WORKDIR /groceries
 
 COPY --from=build /out .
@@ -24,6 +24,7 @@ COPY --from=build /src/Groceries/config.ini /config/
 
 RUN apk add --no-cache icu-libs tzdata
 
+ENV ASPNETCORE_HTTP_PORTS=80
 ENV DOTNET_ENABLEDIAGNOSTICS=0
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 

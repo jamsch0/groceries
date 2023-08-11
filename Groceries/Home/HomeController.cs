@@ -26,8 +26,8 @@ public class HomeController : Controller
                         unnest(tags) AS tag,
                         round(sum((item_quantity->'amount')::numeric * quantity), 1) AS quantity,
                         item_quantity->>'unit' AS unit,
-                        item_quantity->'is_metric' AS is_metric,
-                        item_quantity->'is_divisible' AS is_divisible
+                        (item_quantity->'is_metric')::boolean AS is_metric,
+                        (item_quantity->'is_divisible')::boolean AS is_divisible
                     FROM item_purchases
                     JOIN items USING (item_id)
                     CROSS JOIN item_quantity(name)
