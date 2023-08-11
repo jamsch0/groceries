@@ -9,8 +9,8 @@ COPY */*.csproj ./
 RUN for file in $(ls *.csproj); do mkdir -p ${file%.*} && mv $file ${file%.*}; done
 RUN dotnet restore
 
-COPY ./Groceries/libman.json ./
 WORKDIR Groceries
+COPY ./Groceries/libman.json ./
 RUN dotnet libman restore
 
 COPY . ../
