@@ -47,11 +47,6 @@ var mvc = builder.Services
     })
     .AddSessionStateTempDataProvider();
 
-if (env.IsDevelopment())
-{
-    mvc.AddRazorRuntimeCompilation();
-}
-
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession();
 
