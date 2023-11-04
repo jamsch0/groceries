@@ -1,9 +1,16 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
-WORKDIR /src
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build1
 
+WORKDIR /src
 COPY ./.config ./
 RUN dotnet tool restore
 
+WORKDIR Groceries
+COPY ./Groceries/libman.json ./
+RUN dotnet libman restore
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build2
+
+WORKDIR /src
 COPY ./Groceries.sln ./
 COPY ./Directory.Build.props ./
 
@@ -11,18 +18,15 @@ COPY */*.csproj ./
 RUN for file in $(ls *.csproj); do mkdir -p ${file%.*} && mv $file ${file%.*}; done
 RUN dotnet restore
 
-WORKDIR Groceries
-COPY ./Groceries/libman.json ./
-RUN dotnet libman restore
-
-COPY . ../
+COPY . ./
+COPY --from=build1 /src ./
 RUN dotnet publish --no-restore --output /out
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine-composite AS base
 WORKDIR /groceries
 
-COPY --from=build /out .
-COPY --from=build /src/Groceries/config.ini /config/
+COPY --from=build2 /out .
+COPY --from=build2 /src/Groceries/config.ini /config/
 
 RUN apk add --no-cache icu-libs tzdata
 
