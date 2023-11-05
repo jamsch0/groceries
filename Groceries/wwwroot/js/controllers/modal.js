@@ -13,6 +13,10 @@ export default class ModalController extends Controller {
         if (!this.element.open) {
             return;
         }
+        if (event.type === "turbo:submit-end" && (event.detail.formSubmission.method === 0 || !event.detail.success)) {
+            // Don't close modal if form method was GET or submission failed
+            return;
+        }
 
         event.preventDefault();
 

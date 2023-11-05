@@ -16,10 +16,6 @@ public class Item
     {
     }
 
-    public Item(string brand, string name) : this(default, brand, name)
-    {
-    }
-
     public Guid Id { get; init; }
     public DateTime UpdatedAt { get; set; }
     public string Brand { get; set; }

@@ -1,23 +1,25 @@
-@using Groceries.Data;
-@using Microsoft.EntityFrameworkCore;
+@using Groceries.Data
+@using Microsoft.EntityFrameworkCore
 
-@model Transaction
+@model (Transaction Transaction, TransactionItem? TransactionItem)
 @inject AppDbContext dbContext
 @{
     ViewBag.Title = "New Transaction Item";
 
     var store = await dbContext.Stores
-        .Where(store => store.Id == Model.StoreId)
+        .Where(store => store.Id == Model.Transaction.StoreId)
         .Select(store => string.Concat(store.Retailer!.Name, " ", store.Name))
         .SingleAsync();
 }
 
 <h1>New Transaction Item</h1>
 
-<div class="form-field">@Model.CreatedAt.ToShortDateString() @Model.CreatedAt.ToShortTimeString() &ndash; @store</div>
+<div class="form-field">
+    @Model.Transaction.CreatedAt.ToShortDateString() @Model.Transaction.CreatedAt.ToShortTimeString() &ndash; @store
+</div>
 
 <form method="post" asp-action="NewTransactionItem">
-    <partial name="_TransactionItemForm" model="null" />
+    <partial name="_TransactionItemForm" model="Model.TransactionItem" />
 
     <div class="row">
         <button class="button button--primary" type="submit">Add</button>

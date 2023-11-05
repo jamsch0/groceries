@@ -22,7 +22,7 @@ public class TransactionItem
     public decimal Price { get; set; }
     public int Quantity { get; set; }
 
-    public Item? Item { get; init; }
+    public Item? Item { get; set; }
 
     public decimal Amount => Price * Quantity;
 }

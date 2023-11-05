@@ -99,20 +99,35 @@ public class TransactionsController : Controller
     }
 
     [HttpGet("new/items/new")]
-    public IActionResult NewTransactionItem()
+    public async Task<IActionResult> NewTransactionItem(long? barcodeData, string? barcodeFormat)
     {
         if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
         {
             return RedirectToAction(nameof(NewTransaction));
         }
 
+        TransactionItem? transactionItem = null;
+        if (barcodeData != null && barcodeFormat != null)
+        {
+            var item = await dbContext.Items
+                .Where(item => item.Barcodes.Any(barcode => barcode.BarcodeData == barcodeData))
+                .FirstOrDefaultAsync();
+
+            item ??= new Item(id: default);
+            item.Barcodes.Add(new ItemBarcode(item.Id, barcodeData.Value, barcodeFormat));
+
+            // TODO: Fix `MinValue` hack - view models?
+            transactionItem = new TransactionItem(item.Id, decimal.MinValue, int.MinValue) { Item = item };
+        }
+
+        var model = (transaction, transactionItem);
         return Request.IsTurboFrameRequest("modal")
-            ? View($"{nameof(NewTransactionItem)}_Modal", transaction)
-            : View(transaction);
+            ? View($"{nameof(NewTransactionItem)}_Modal", model)
+            : View(model);
     }
 
     [HttpPost("new/items/new")]
-    public async Task<IActionResult> NewTransactionItem(string brand, string name, decimal price, int quantity)
+    public async Task<IActionResult> NewTransactionItem(string brand, string name, decimal price, int quantity, long? barcodeData, string? barcodeFormat)
     {
         if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
         {
@@ -124,17 +139,18 @@ public class TransactionsController : Controller
             .Select(item => item.Id)
             .SingleOrDefaultAsync();
 
-        if (itemId == default)
+        var item = new Item(itemId, brand, name);
+        if (barcodeData != null && barcodeFormat != null)
         {
-            var item = new Item(brand, name);
-            dbContext.Items.Add(item);
-            await dbContext.SaveChangesAsync();
-            itemId = item.Id;
+            item.Barcodes.Add(new ItemBarcode(itemId, barcodeData.Value, barcodeFormat));
         }
+
+        dbContext.Items.Attach(item);
+        await dbContext.SaveChangesAsync();
 
         // TODO: Handle item already in transaction - merge, replace, error?
 
-        var transactionItem = new TransactionItem(itemId, price, quantity);
+        var transactionItem = new TransactionItem(item.Id, price, quantity) { Item = item };
         transaction.Items.Add(transactionItem);
 
         TempData["NewTransaction"] = JsonSerializer.Serialize(transaction);
@@ -183,17 +199,17 @@ public class TransactionsController : Controller
             .Select(item => item.Id)
             .SingleOrDefaultAsync();
 
-        if (itemId == default)
-        {
-            var item = new Item(brand, name);
-            dbContext.Items.Add(item);
-            await dbContext.SaveChangesAsync();
-            itemId = item.Id;
-        }
+        var item = new Item(itemId, brand, name);
 
-        transactionItem.ItemId = itemId;
+        dbContext.Items.Attach(item);
+        await dbContext.SaveChangesAsync();
+
+        transactionItem.Item = item;
+        transactionItem.ItemId = item.Id;
         transactionItem.Price = price;
         transactionItem.Quantity = quantity;
+
+        // TODO: Handle barcode when editing item - replace, disable?
 
         TempData["NewTransaction"] = JsonSerializer.Serialize(transaction);
 
@@ -243,7 +259,10 @@ public class TransactionsController : Controller
         }
 
         // Work around EF trying to insert items by explicitly tracking them as unchanged
-        dbContext.Items.AttachRange(transaction.Promotions.SelectMany(promotion => promotion.Items));
+        dbContext.Items.AttachRange(
+            transaction.Items
+                .Select(item => item.Item!)
+                .Concat(transaction.Promotions.SelectMany(promotion => promotion.Items)));
 
         dbContext.Transactions.Add(transaction);
         await dbContext.SaveChangesAsync();
