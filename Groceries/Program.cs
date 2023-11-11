@@ -1,7 +1,9 @@
 using DbUp;
 using Groceries.Common;
 using Groceries.Data;
+using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
@@ -37,7 +39,29 @@ if (env.IsProduction())
     dataProtection.PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(dataDir, "keys")));
 }
 
-var mvc = builder.Services
+var oauthConfig = builder.Configuration.GetSection("OAuth");
+if (oauthConfig.Exists())
+{
+    const string authenticationScheme = "OAuth";
+    builder.Services.Configure<OAuthOptions>(authenticationScheme, oauthConfig);
+
+    builder.Services
+        .AddAuthentication(options =>
+        {
+            options.DefaultScheme = IdentityConstants.ExternalScheme;
+            options.DefaultChallengeScheme = authenticationScheme;
+        })
+        .AddOAuth(authenticationScheme, options =>
+        {
+            options.SignInScheme = IdentityConstants.ExternalScheme;
+            options.CallbackPath = "/signin";
+        })
+        .AddExternalCookie();
+
+    builder.Services.AddAuthorization();
+}
+
+builder.Services
     .AddControllersWithViews()
     .AddRazorOptions(options =>
     {
@@ -63,10 +87,21 @@ var app = builder.Build();
 
 app.UseStaticFiles();
 app.UseRouting();
+
+if (oauthConfig.Exists())
+{
+    app.UseAuthentication();
+    app.UseAuthorization();
+}
+
 app.UseSession();
 
-app.MapControllers();
+var controllers = app.MapControllers();
+if (oauthConfig.Exists())
+{
+    controllers.RequireAuthorization();
+}
 
-app.Run();
+await app.RunAsync();
 
 return 0;
