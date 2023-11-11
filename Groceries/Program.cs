@@ -3,6 +3,7 @@ using Groceries.Common;
 using Groceries.Data;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Razor;
@@ -85,6 +86,7 @@ builder.Services.AddDbContextPool<AppDbContext>(options => options
 
 var app = builder.Build();
 
+app.UseForwardedHeaders(new() { ForwardedHeaders = ForwardedHeaders.All });
 app.UseStaticFiles();
 app.UseRouting();
 
