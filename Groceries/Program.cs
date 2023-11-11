@@ -34,6 +34,13 @@ if (!dbUpgradeResult.Successful)
     return -1;
 }
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.All;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var dataProtection = builder.Services.AddDataProtection();
 if (env.IsProduction())
 {
@@ -86,7 +93,7 @@ builder.Services.AddDbContextPool<AppDbContext>(options => options
 
 var app = builder.Build();
 
-app.UseForwardedHeaders(new() { ForwardedHeaders = ForwardedHeaders.All });
+app.UseForwardedHeaders();
 app.UseStaticFiles();
 app.UseRouting();
 
