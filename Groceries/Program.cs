@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
+using System.Net.Http.Headers;
+using System.Security.Claims;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
@@ -63,6 +66,29 @@ if (oauthConfig.Exists())
         {
             options.SignInScheme = IdentityConstants.ExternalScheme;
             options.CallbackPath = "/signin";
+
+            foreach (string scope in (oauthConfig["Scopes"] ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries))
+            {
+                options.Scope.Add(scope.Trim());
+            }
+
+            // Antiforgery token generation requires authenticated identities to have claims
+            // and the default OAuth authentication handler does not fetch user info.
+            options.Events.OnCreatingTicket = async context =>
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                request.Headers.Authorization = new AuthenticationHeaderValue(context.TokenType ?? "Bearer", context.AccessToken);
+
+                using var response = await context.Backchannel.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, context.HttpContext.RequestAborted);
+                response.EnsureSuccessStatusCode();
+
+                using var payload = JsonDocument.Parse(await response.Content.ReadAsStreamAsync(context.HttpContext.RequestAborted));
+                context.Identity!.AddClaims(
+                    payload.RootElement.EnumerateObject()
+                        .Where(property => property.Value.ValueKind is JsonValueKind.String or JsonValueKind.Number)
+                        .Select(property => new Claim(property.Name, property.Value.ToString())));
+            };
         })
         .AddExternalCookie();
 
