@@ -142,7 +142,13 @@ public class TransactionsController : Controller
         var item = new Item(itemId, brand, name);
         if (barcodeData != null && barcodeFormat != null)
         {
-            item.Barcodes.Add(new ItemBarcode(itemId, barcodeData.Value, barcodeFormat));
+            var barcode = new ItemBarcode(itemId, barcodeData.Value, barcodeFormat);
+            item.Barcodes.Add(barcode);
+
+            if (!await dbContext.ItemBarcodes.ContainsAsync(barcode))
+            {
+                dbContext.ItemBarcodes.Add(barcode);
+            }
         }
 
         dbContext.Items.Attach(item);

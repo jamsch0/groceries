@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<Item> Items => Set<Item>();
+    public DbSet<ItemBarcode> ItemBarcodes => Set<ItemBarcode>();
     public DbSet<ItemPurchase> ItemPurchases => Set<ItemPurchase>();
     public DbSet<ItemTagQuantity> ItemTagQuantities => Set<ItemTagQuantity>();
     public DbSet<List> Lists => Set<List>();
@@ -28,7 +29,6 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<ItemBarcode>(entity =>
         {
-            entity.ToTable("item_barcodes");
             entity.HasKey(e => new { e.ItemId, e.BarcodeData });
 
             entity.Property(e => e.Format)
