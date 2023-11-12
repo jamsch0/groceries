@@ -111,6 +111,7 @@ public class TransactionsController : Controller
         {
             var item = await dbContext.Items
                 .Where(item => item.Barcodes.Any(barcode => barcode.BarcodeData == barcodeData))
+                .OrderByDescending(item => item.UpdatedAt)
                 .FirstOrDefaultAsync();
 
             item ??= new Item(id: default);
