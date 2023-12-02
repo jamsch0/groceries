@@ -1,6 +1,7 @@
 namespace Groceries.Transactions;
 
 using Groceries.Data;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
@@ -16,48 +17,9 @@ public class TransactionsController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(int page, string? sort, string? dir)
+    public IResult Index()
     {
-        var transactionsQuery = dbContext.Transactions
-            .Join(
-                dbContext.TransactionTotals,
-                transaction => transaction.Id,
-                transactionTotal => transactionTotal.TransactionId,
-                (transaction, transactionTotal) => new
-                {
-                    transaction.Id,
-                    transaction.CreatedAt,
-                    Store = string.Concat(transaction.Store!.Retailer!.Name, " ", transaction.Store.Name),
-                    TotalAmount = transactionTotal.Total,
-                    TotalItems = transaction.Items.Sum(item => item.Quantity),
-                });
-
-        transactionsQuery = sort?.ToLowerInvariant() switch
-        {
-            "date" when dir == "desc" => transactionsQuery.OrderByDescending(transaction => transaction.CreatedAt),
-            "amount" when dir == "desc" => transactionsQuery.OrderByDescending(transaction => transaction.TotalAmount),
-            "items" when dir == "desc" => transactionsQuery.OrderByDescending(transaction => transaction.TotalItems),
-            "date" => transactionsQuery.OrderBy(transaction => transaction.CreatedAt),
-            "amount" => transactionsQuery.OrderBy(transaction => transaction.TotalAmount),
-            "items" => transactionsQuery.OrderBy(transaction => transaction.TotalItems),
-            _ => transactionsQuery.OrderByDescending(transaction => transaction.CreatedAt),
-        };
-
-        var transactions = await transactionsQuery
-            .Select(transaction => new TransactionListModel.Transaction(transaction.Id, transaction.CreatedAt, transaction.Store)
-            {
-                TotalAmount = transaction.TotalAmount,
-                TotalItems = transaction.TotalItems,
-            })
-            .ToListPageModelAsync(page);
-
-        if (transactions.Page != page)
-        {
-            return RedirectToAction(nameof(Index), new { page = transactions.Page });
-        }
-
-        var model = new TransactionListModel(sort, dir, transactions);
-        return View(model);
+        return new RazorComponentResult<TransactionsPage>();
     }
 
     [HttpGet("new")]

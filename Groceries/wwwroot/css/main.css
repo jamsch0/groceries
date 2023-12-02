@@ -350,6 +350,8 @@ html:has(.modal[open]) {
     color: inherit;
     text-decoration: none;
     position: relative;
+    display: inline-block;
+    width: 100%;
 }
 
 .table__header--sortable a::after {

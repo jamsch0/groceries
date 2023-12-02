@@ -1,0 +1,139 @@
+@using Groceries.Data
+@layout Layout
+
+@inject AppDbContext DbContext
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Groceries &ndash; Transactions</PageTitle>
+
+<div class="row">
+    <h1 class="row__fill">Transactions</h1>
+    <a class="button button--primary form-field" href="/transactions/new">New transaction</a>
+</div>
+
+<section class="table">
+    <table>
+        <thead>
+            <tr>
+                <th scope="col" class="table__header table__header--shaded table__header--sortable">
+                    <a href="@GetColumnHeaderUri("date")" data-dir="@GetColumnSortDirection("date")">
+                        Date
+                    </a>
+                </th>
+                <th scope="col" class="table__header table__header--shaded" style="width: 100%">Store</th>
+                <th scope="col" class="table__header table__header--shaded table__header--sortable">
+                    <a href="@GetColumnHeaderUri("items")" data-dir="@GetColumnSortDirection("items")">
+                        Items
+                    </a>
+                </th>
+                <th scope="col" class="table__header table__header--shaded table__header--sortable">
+                    <a href="@GetColumnHeaderUri("amount")" data-dir="@GetColumnSortDirection("amount")">
+                        Amount
+                    </a>
+                </th>
+                @* <th scope="col" class="table__header table__header--shaded"></th> *@
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var transaction in transactions)
+            {
+                <tr>
+                    <td class="table__cell">
+                        <time datetime="@transaction.CreatedAt.ToString("o")">@transaction.CreatedAt.ToLongDateString()</time>
+                    </td>
+                    <td class="table__cell">@transaction.Store</td>
+                    <td class="table__cell table__cell--numeric">@transaction.TotalItems</td>
+                    <td class="table__cell table__cell--numeric">@transaction.TotalAmount.ToString("c")</td>
+                    @*<td class="table__cell">View</td>*@
+                </tr>
+            }
+        </tbody>
+    </table>
+    <TablePaginator Model="transactions" />
+</section>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int? Page { get; set; }
+
+    [SupplyParameterFromQuery(Name = "sort")]
+    public string? SortColumnName { get; set; }
+
+    [SupplyParameterFromQuery(Name = "dir")]
+    public string? SortDirection { get; set; }
+
+    private record TransactionModel(Guid Id, DateTime CreatedAt, string Store, decimal TotalAmount, int TotalItems);
+
+    private ListPageModel<TransactionModel> transactions = ListPageModel.Empty<TransactionModel>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var transactionsQuery = DbContext.Transactions
+            .Join(
+                DbContext.TransactionTotals,
+                transaction => transaction.Id,
+                transactionTotal => transactionTotal.TransactionId,
+                (transaction, transactionTotal) => new
+                {
+                    transaction.Id,
+                    transaction.CreatedAt,
+                    Store = string.Concat(transaction.Store!.Retailer!.Name, " ", transaction.Store.Name),
+                    TotalAmount = transactionTotal.Total,
+                    TotalItems = transaction.Items.Sum(item => item.Quantity),
+                });
+
+        transactionsQuery = SortColumnName?.ToLowerInvariant() switch
+        {
+            "date" when SortDirection == "desc" => transactionsQuery.OrderByDescending(transaction => transaction.CreatedAt),
+            "amount" when SortDirection == "desc" => transactionsQuery.OrderByDescending(transaction => transaction.TotalAmount),
+            "items" when SortDirection == "desc" => transactionsQuery.OrderByDescending(transaction => transaction.TotalItems),
+            "date" => transactionsQuery.OrderBy(transaction => transaction.CreatedAt),
+            "amount" => transactionsQuery.OrderBy(transaction => transaction.TotalAmount),
+            "items" => transactionsQuery.OrderBy(transaction => transaction.TotalItems),
+            _ => transactionsQuery.OrderByDescending(transaction => transaction.CreatedAt),
+        };
+
+        transactions = await transactionsQuery
+            .Select(transaction => new TransactionModel(
+                transaction.Id,
+                transaction.CreatedAt,
+                transaction.Store,
+                transaction.TotalAmount,
+                transaction.TotalItems))
+            .ToListPageModelAsync(Page.GetValueOrDefault(), cancellationToken: HttpContextAccessor.HttpContext!.RequestAborted);
+
+        if (transactions.Page != Page)
+        {
+            Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("page", transactions.Page));
+        }
+    }
+
+    private string GetColumnHeaderUri(string name)
+    {
+        var nextSortDirecton = name == SortColumnName
+            ? SortDirection switch
+            {
+                null or "" => "asc",
+                "asc" => "desc",
+                _ => null,
+            }
+            : "asc";
+
+        return Navigation.GetUriWithQueryParameters(new Dictionary<string, object?>
+        {
+            { "sort", nextSortDirecton != null ? name : null },
+            { "dir", nextSortDirecton },
+            { "page", 1 },
+        });
+    }
+
+    private string? GetColumnSortDirection(string name)
+    {
+        return SortDirection switch
+        {
+            "asc" or "desc" when name == SortColumnName => SortDirection,
+            _ => null,
+        };
+    }
+}
