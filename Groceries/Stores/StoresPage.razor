@@ -1,0 +1,80 @@
+@using Groceries.Data
+@using Microsoft.EntityFrameworkCore
+
+@layout Layout
+
+@inject AppDbContext DbContext
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Groceries &ndash; Stores</PageTitle>
+
+<div class="row">
+    <h1 class="row__fill">Stores</h1>
+    <SearchForm data-turbo-frame="table" data-turbo-action="advance">
+        <input type="hidden" name="page" value="1" />
+    </SearchForm>
+    <a class="button button--primary" href="/stores/new" data-turbo-frame="modal">New store</a>
+</div>
+
+<turbo-frame id="table" target="top">
+    <section class="table">
+        <table>
+            <thead>
+                <tr>
+                    <th scope="col" class="table__header table__header--shaded">Retailer</th>
+                    <th scope="col" class="table__header table__header--shaded" style="width: 100%">Name</th>
+                    <th scope="col" class="table__header table__header--shaded">Transactions</th>
+                    <th scope="col" class="table__header table__header--shaded"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var store in stores)
+                {
+                    <tr>
+                        <td class="table__cell">@store.Retailer</td>
+                        <td class="table__cell">@store.Name</td>
+                        <td class="table__cell table__cell--numeric">@store.TransactionsCount</td>
+                        <td class="table__cell">
+                            <a class="link" href="/stores/edit/@store.Id" data-turbo-frame="modal">Edit</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <TablePaginator Model="stores" />
+    </section>
+</turbo-frame>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int? Page { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? Search { get; set; }
+
+    private record StoreModel(Guid Id, string Retailer, string Name, int TransactionsCount);
+
+    private ListPageModel<StoreModel> stores = ListPageModel.Empty<StoreModel>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var storesQuery = DbContext.Stores.AsQueryable();
+        if (!string.IsNullOrEmpty(Search))
+        {
+            var searchPattern = $"%{Search}%";
+            storesQuery = storesQuery.Where(store => EF.Functions.ILike(store.Retailer!.Name + ' ' + store.Name, searchPattern));
+        }
+
+        stores = await storesQuery
+            .OrderBy(store => store.Retailer!.Name)
+            .ThenBy(store => store.Name)
+            .Select(store => new StoreModel(store.Id, store.Retailer!.Name, store.Name, store.Transactions!.Count()))
+            .ToListPageModelAsync(Page.GetValueOrDefault(), cancellationToken: HttpContextAccessor.HttpContext!.RequestAborted);
+
+        if (stores.Page != Page)
+        {
+            Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("page", stores.Page));
+        }
+    }
+}

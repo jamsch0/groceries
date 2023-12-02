@@ -2,6 +2,7 @@ namespace Groceries.Stores;
 
 using Groceries.Common;
 using Groceries.Data;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,31 +17,9 @@ public class StoresController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(int page, string? search)
+    public IResult Index()
     {
-        var storesQuery = dbContext.Stores.AsQueryable();
-        if (!string.IsNullOrEmpty(search))
-        {
-            var searchPattern = $"%{search}%";
-            storesQuery = storesQuery.Where(store => EF.Functions.ILike(store.Retailer!.Name + ' ' + store.Name, searchPattern));
-        }
-
-        var stores = await storesQuery
-            .OrderBy(store => store.Retailer!.Name)
-            .ThenBy(store => store.Name)
-            .Select(store => new StoreListModel.Store(store.Id, store.Retailer!.Name, store.Name)
-            {
-                TotalTransactions = store.Transactions!.Count(),
-            })
-            .ToListPageModelAsync(page, cancellationToken: HttpContext.RequestAborted);
-
-        if (stores.Page != page)
-        {
-            return RedirectToAction(nameof(Index), new { page = stores.Page, search });
-        }
-
-        var model = new StoreListModel(search, stores);
-        return View(model);
+        return new RazorComponentResult<StoresPage>();
     }
 
     [HttpGet("new")]

@@ -56,6 +56,7 @@ builder.Services
     .AddSessionStateTempDataProvider();
 
 builder.Services.AddDistributedMemoryCache();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSession();
 
 builder.Services.AddSingleton<IActionResultExecutor<TurboStreamResult>, TurboStreamResultExecutor>();

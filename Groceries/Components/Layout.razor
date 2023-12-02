@@ -1,0 +1,30 @@
+@inherits LayoutComponentBase
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/css/main.css" asp-append-version="true" data-turbo-track="reload" />
+
+    <script type="module" src="/js/main.js" asp-append-version="true" data-turbo-track="reload"></script>
+    <script type="module" src="/lib/hotwired/turbo/dist/turbo.es2017-esm.js"></script>
+
+    <HeadOutlet />
+</head>
+<body>
+    <Sidebar />
+
+    <main class="main-content">
+        @*<turbo-frame id="main" target="_top">*@
+        @Body
+        @*</turbo-frame>*@
+    </main>
+
+    <dialog class="modal" data-controller="modal" data-action="turbo:frame-load->modal#open turbo:before-cache@document->modal#close popstate@window->modal#close">
+        <turbo-frame id="modal" data-modal-target="frame"></turbo-frame>
+    </dialog>
+</body>
+</html>
