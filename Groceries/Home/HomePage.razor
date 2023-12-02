@@ -1,0 +1,79 @@
+@using Groceries.Data
+@using Humanizer
+@using Microsoft.EntityFrameworkCore
+
+@layout Layout
+
+@inject AppDbContext DbContext
+@inject IHttpContextAccessor HttpContextAccessor
+
+<HeadContent>
+    <meta name="turbo-cache-control" content="no-preview" />
+</HeadContent>
+
+<PageTitle>Groceries</PageTitle>
+
+<section class="card">
+    <header class="card__header">
+        <h2>Item Quantity (last 90 days)</h2>
+    </header>
+    <div class="card__content">
+        @if (model != null)
+        {
+            if (model.IsDivisible)
+            {
+                var quantity = Convert.ToDouble(model.Quantity);
+                var weekQuantity = Math.Round(quantity / 12);
+
+                <strong>@(model.IsMetric ? quantity.ToMetric() : quantity)@model.Unit @model.Tag</strong>
+                <small>(@(model.IsMetric ? weekQuantity.ToMetric() : weekQuantity)@model.Unit per week)</small>
+            }
+            else
+            {
+                var name = model.Unit != null ? $"{model.Tag} {model.Unit}" : model.Tag;
+
+                var averageQuantity = model.Quantity / 12;
+                var averagePeriod = "week";
+                if (averageQuantity < 1)
+                {
+                    averageQuantity *= 4;
+                    averagePeriod = "month";
+                }
+
+                <strong>@name.ToQuantity(Convert.ToInt32(model.Quantity))</strong>
+                <small>(@name.ToQuantity(Convert.ToInt32(averageQuantity)) per @averagePeriod)</small>
+            }
+        }
+    </div>
+</section>
+
+@code {
+    private ItemTagQuantity? model;
+
+    protected override async Task OnInitializedAsync()
+    {
+        model = await DbContext.ItemTagQuantities
+            .FromSqlRaw(@"
+                SELECT tag, quantity, coalesce(unit_name, unit) AS unit, is_metric, is_divisible
+                FROM (
+                    SELECT
+                        unnest(tags) AS tag,
+                        round(sum((item_quantity->'amount')::numeric * quantity), 1) AS quantity,
+                        item_quantity->>'unit' AS unit,
+                        (item_quantity->'is_metric')::boolean AS is_metric,
+                        (item_quantity->'is_divisible')::boolean AS is_divisible
+                    FROM item_purchases
+                    JOIN items USING (item_id)
+                    CROSS JOIN item_quantity(name)
+                    WHERE array_length(tags, 1) > 0
+                        AND age(created_at) <= '90 days'
+                        AND item_quantity IS NOT NULL
+                    GROUP BY tag, item_quantity->>'unit', item_quantity->'is_metric', item_quantity->'is_divisible'
+                    ORDER BY random()
+                    FETCH FIRST ROW ONLY
+                ) AS random_item_tag_quantity
+                LEFT JOIN item_tags USING (tag)
+                ")
+            .FirstOrDefaultAsync(HttpContextAccessor.HttpContext!.RequestAborted);
+    }
+}
