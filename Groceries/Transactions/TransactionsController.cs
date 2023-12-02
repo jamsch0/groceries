@@ -1,6 +1,5 @@
 namespace Groceries.Transactions;
 
-using Groceries.Common;
 using Groceries.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

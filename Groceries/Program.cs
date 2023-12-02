@@ -1,9 +1,7 @@
 using DbUp;
-using Groceries.Common;
 using Groceries.Data;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 
@@ -58,8 +56,6 @@ builder.Services
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSession();
-
-builder.Services.AddSingleton<IActionResultExecutor<TurboStreamResult>, TurboStreamResultExecutor>();
 
 builder.Services.AddDbContextPool<AppDbContext>(options => options
     .EnableDetailedErrors(env.IsDevelopment())
