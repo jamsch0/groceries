@@ -1,0 +1,32 @@
+@using Groceries.Data
+
+@layout Layout
+
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Groceries &ndash; Edit Store</PageTitle>
+
+<h1>Edit Store</h1>
+
+<StoreForm Store="Store">
+    <div class="row">
+        <button class="button button--primary">Save</button>
+        <a class="button" href="@returnUrl">Cancel</a>
+    </div>
+</StoreForm>
+
+@code {
+    [Parameter]
+    public required Store Store { get; set; }
+
+    private string returnUrl = "/stores?page=1";
+
+    protected override void OnInitialized()
+    {
+        var request = HttpContextAccessor.HttpContext!.Request;
+        if (request.GetRefererIfSameOrigin() is Uri referer && referer != request.GetUri())
+        {
+            returnUrl = referer.PathAndQuery;
+        }
+    }
+}

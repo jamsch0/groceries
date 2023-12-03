@@ -1,0 +1,27 @@
+@layout Layout
+
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Groceries &ndash; New Store</PageTitle>
+
+<h1>New Store</h1>
+
+<StoreForm>
+    <div class="row">
+        <button class="button button--primary">Save</button>
+        <a class="button" href="@returnUrl">Cancel</a>
+    </div>
+</StoreForm>
+
+@code {
+    private string returnUrl = "/stores?page=1";
+
+    protected override void OnInitialized()
+    {
+        var request = HttpContextAccessor.HttpContext!.Request;
+        if (request.GetRefererIfSameOrigin() is Uri referer && referer != request.GetUri())
+        {
+            returnUrl = referer.PathAndQuery;
+        }
+    }
+}

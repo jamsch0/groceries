@@ -1,0 +1,52 @@
+@using Groceries.Data
+@using Microsoft.EntityFrameworkCore
+
+@inject AppDbContext DbContext
+
+<form method="post" @attributes="AdditionalAttributes">
+    <div class="form-field">
+        <label class="form-field__label" for="storeRetailerId">Retailer</label>
+        <select class="form-field__control select" id="storeRetailerId" name="retailerId" required autofocus>
+            @foreach (var retailer in retailers)
+            {
+                <option value="@retailer.Id" selected="@(retailer.Id == Store?.RetailerId)">@retailer.Name</option>
+            }
+        </select>
+    </div>
+
+    <div class="form-field">
+        <label class="form-field__label" for="storeName">Name</label>
+        <div class="form-field__control input">
+            <input class="input__control" id="storeName" name="name" value="@Store?.Name" required />
+        </div>
+    </div>
+
+    <div class="form-field">
+        <label class="form-field__label" for="storeAddress">
+            Address <span class="form-field__corner-hint">Optional</span>
+        </label>
+        <textarea class="form-field__control textarea" id="storeAddress" name="address" rows="4">@Store?.Address</textarea>
+    </div>
+
+    @ChildContent
+</form>
+
+@code {
+    [Parameter]
+    public Store? Store { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private Retailer[] retailers = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        retailers = await DbContext.Retailers
+            .OrderBy(retailer => retailer.Name)
+            .ToArrayAsync();
+    }
+}

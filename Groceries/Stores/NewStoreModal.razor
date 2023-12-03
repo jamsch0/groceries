@@ -1,0 +1,10 @@
+@layout Modal
+
+<SectionContent SectionName="modalTitle">New Store</SectionContent>
+
+<StoreForm class="card__content" id="newStore" data-action="turbo:submit-end->modal#close" />
+
+<footer class="card__footer card__footer--shaded row">
+    <button class="button button--primary" type="submit" form="newStore">Save</button>
+    <button class="button" data-action="modal#close">Cancel</button>
+</footer>

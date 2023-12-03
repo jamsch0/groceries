@@ -22,15 +22,15 @@ public class StoresController : Controller
     }
 
     [HttpGet("new")]
-    public IActionResult NewStore()
+    public IResult NewStore()
     {
         return Request.IsTurboFrameRequest("modal")
-            ? View($"{nameof(NewStore)}_Modal")
-            : View();
+            ? new RazorComponentResult<NewStoreModal>()
+            : new RazorComponentResult<NewStorePage>();
     }
 
     [HttpPost("new")]
-    public async Task<IActionResult> NewStore(Guid retailerId, string name, string? address)
+    public async Task<IResult> NewStore(Guid retailerId, string name, string? address)
     {
         var store = new Store(retailerId, name, address);
         dbContext.Stores.Add(store);
@@ -38,28 +38,28 @@ public class StoresController : Controller
         await dbContext.SaveChangesAsync(HttpContext.RequestAborted);
 
         return Request.IsTurboFrameRequest("modal")
-            ? NoContent()
-            : RedirectToAction(nameof(Index), new { page = 1 });
+            ? Results.NoContent()
+            : Results.LocalRedirect("/stores?page=1");
     }
 
     [HttpGet("edit/{id}")]
-    public async Task<IActionResult> EditStore(Guid id)
+    public async Task<IResult> EditStore(Guid id)
     {
         var store = await dbContext.Stores
             .SingleOrDefaultAsync(store => store.Id == id, HttpContext.RequestAborted);
 
         if (store == null)
         {
-            return NotFound();
+            return Results.NotFound();
         }
 
         return Request.IsTurboFrameRequest("modal")
-            ? View($"{nameof(EditStore)}_Modal", store)
-            : View(store);
+            ? new RazorComponentResult<EditStoreModal>(new { Store = store })
+            : new RazorComponentResult<EditStorePage>(new { Store = store });
     }
 
     [HttpPost("edit/{id}")]
-    public async Task<IActionResult> EditStore(Guid id, Guid retailerId, string name, string? address)
+    public async Task<IResult> EditStore(Guid id, Guid retailerId, string name, string? address, string? returnUrl)
     {
         var store = new Store(id, retailerId, name, address);
         dbContext.Stores.Update(store);
@@ -67,7 +67,7 @@ public class StoresController : Controller
         await dbContext.SaveChangesAsync(HttpContext.RequestAborted);
 
         return Request.IsTurboFrameRequest("modal")
-            ? NoContent()
-            : RedirectToAction(nameof(EditStore));
+            ? Results.NoContent()
+            : Results.LocalRedirect($"/stores/edit/{id}");
     }
 }
