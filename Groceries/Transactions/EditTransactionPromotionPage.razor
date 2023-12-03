@@ -1,0 +1,43 @@
+@using Groceries.Data
+@using Microsoft.EntityFrameworkCore
+
+@layout Layout
+
+@inject AppDbContext DbContext
+
+<PageTitle>Groceries &ndash; Edit Transaction Promotion</PageTitle>
+
+<h1>Edit Transaction Promotion</h1>
+
+<div class="form-field">
+    @Transaction.CreatedAt.ToShortDateString() @Transaction.CreatedAt.ToLongTimeString() &ndash; @store
+</div>
+
+<TransactionPromotionForm Transaction="Transaction" Promotion="Promotion" id="editTransactionPromotion" />
+
+<form method="post" action="/transactions/new/promotions/delete/@Promotion.Id" id="deleteTransactionPromotion"></form>
+
+<div class="row">
+    <button class="button button--primary" type="submit" form="editTransactionPromotion">Update</button>
+    <a class="button" href="/transactions/new/promotions">Cancel</a>
+    <span class="row__fill"></span>
+    <button class="button button--danger" type="submit" form="deleteTransactionPromotion">Remove</button>
+</div>
+
+@code {
+    [Parameter]
+    public required Transaction Transaction { get; set; }
+
+    [Parameter]
+    public required TransactionPromotion Promotion { get; set; }
+
+    private string store = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        store = await DbContext.Stores
+            .Where(store => store.Id == Transaction.StoreId)
+            .Select(store => string.Concat(store.Retailer!.Name, " ", store.Name))
+            .SingleAsync();
+    }
+}

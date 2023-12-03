@@ -1,0 +1,17 @@
+@using Groceries.Data
+
+@layout Modal
+
+<SectionContent SectionName="modalTitle">New Transaction Promotion</SectionContent>
+
+<TransactionPromotionForm Transaction="Transaction" class="card__content" id="newTransactionPromotion" data-action="turbo:submit-end->modal#close" />
+
+<footer class="card__footer card__footer--shaded row">
+    <button class="button button--primary" type="submit" form="newTransactionPromotion">Add</button>
+    <button class="button" data-action="modal#close">Cancel</button>
+</footer>
+
+@code {
+    [Parameter]
+    public required Transaction Transaction { get; set; }
+}

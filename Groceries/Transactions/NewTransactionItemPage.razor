@@ -1,0 +1,39 @@
+@using Groceries.Data
+@using Microsoft.EntityFrameworkCore
+
+@layout Layout
+
+@inject AppDbContext DbContext
+
+<PageTitle>Groceries &ndash; New Transaction Item</PageTitle>
+
+<h1>New Transaction Item</h1>
+
+<div class="form-field">
+    @Transaction.CreatedAt.ToShortDateString() @Transaction.CreatedAt.ToLongTimeString() &ndash; @store
+</div>
+
+<TransactionItemForm TransactionItem="TransactionItem">
+    <div class="row">
+        <button class="button button--primary" type="submit">Add</button>
+        <a class="button" href="/transaction/new/items">Cancel</a>
+    </div>
+</TransactionItemForm>
+
+@code {
+    [Parameter]
+    public required Transaction Transaction { get; set; }
+
+    [Parameter]
+    public TransactionItem? TransactionItem { get; set; }
+
+    private string store = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        store = await DbContext.Stores
+            .Where(store => store.Id == Transaction.StoreId)
+            .Select(store => string.Concat(store.Retailer!.Name, " ", store.Name))
+            .SingleAsync();
+    }
+}

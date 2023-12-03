@@ -2,7 +2,6 @@ using DbUp;
 using Groceries.Data;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,13 +43,7 @@ if (env.IsProduction())
 }
 
 builder.Services
-    .AddControllersWithViews()
-    .AddRazorOptions(options =>
-    {
-        options.ViewLocationFormats.Clear();
-        options.ViewLocationFormats.Add("/{1}/{0}" + RazorViewEngine.ViewExtension);
-        options.ViewLocationFormats.Add("/Common/{0}" + RazorViewEngine.ViewExtension);
-    })
+    .AddControllers()
     .AddSessionStateTempDataProvider();
 
 builder.Services.AddDistributedMemoryCache();

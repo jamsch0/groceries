@@ -23,48 +23,48 @@ public class TransactionsController : Controller
     }
 
     [HttpGet("new")]
-    public IActionResult NewTransaction()
+    public IResult NewTransaction()
     {
-        return View();
+        return new RazorComponentResult<NewTransactionPage>();
     }
 
     [HttpPost("new")]
-    public IActionResult NewTransaction(DateTime createdAt, Guid storeId)
+    public IResult NewTransaction(DateTime createdAt, Guid storeId)
     {
         var transaction = new Transaction(createdAt.ToUniversalTime(), storeId);
         TempData["NewTransaction"] = JsonSerializer.Serialize(transaction);
 
-        return RedirectToAction(nameof(NewTransactionItems));
+        return Results.LocalRedirect("/transactions/new/items");
     }
 
     [HttpGet("new/items")]
-    public IActionResult NewTransactionItems()
+    public IResult NewTransactionItems()
     {
         if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
         {
-            return RedirectToAction(nameof(NewTransaction));
+            return Results.LocalRedirect("/transactions/new");
         }
 
-        return View(transaction);
+        return new RazorComponentResult<NewTransactionItemsPage>(new { Transaction = transaction });
     }
 
     [HttpPost("new/items")]
-    public IActionResult PostNewTransactionItems()
+    public IResult PostNewTransactionItems()
     {
-        if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
+        if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is null)
         {
-            return RedirectToAction(nameof(NewTransaction));
+            return Results.LocalRedirect("/transactions/new");
         }
 
-        return RedirectToAction(nameof(NewTransactionPromotions));
+        return Results.LocalRedirect("/transactions/new/promotions");
     }
 
     [HttpGet("new/items/new")]
-    public async Task<IActionResult> NewTransactionItem(long? barcodeData, string? barcodeFormat)
+    public async Task<IResult> NewTransactionItem(long? barcodeData, string? barcodeFormat)
     {
         if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
         {
-            return RedirectToAction(nameof(NewTransaction));
+            return Results.LocalRedirect("/transactions/new");
         }
 
         TransactionItem? transactionItem = null;
@@ -82,18 +82,18 @@ public class TransactionsController : Controller
             transactionItem = new TransactionItem(item.Id, decimal.MinValue, int.MinValue) { Item = item };
         }
 
-        var model = (transaction, transactionItem);
+        var parameters = new { Transaction = transaction, TransactionItem = transactionItem };
         return Request.IsTurboFrameRequest("modal")
-            ? View($"{nameof(NewTransactionItem)}_Modal", model)
-            : View(model);
+            ? new RazorComponentResult<NewTransactionItemModal>(parameters)
+            : new RazorComponentResult<NewTransactionItemPage>(parameters);
     }
 
     [HttpPost("new/items/new")]
-    public async Task<IActionResult> NewTransactionItem(string brand, string name, decimal price, int quantity, long? barcodeData, string? barcodeFormat)
+    public async Task<IResult> NewTransactionItem(string brand, string name, decimal price, int quantity, long? barcodeData, string? barcodeFormat)
     {
         if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
         {
-            return RedirectToAction(nameof(NewTransaction));
+            return Results.LocalRedirect("/transactions/new");
         }
 
         var itemId = await dbContext.Items
@@ -124,42 +124,42 @@ public class TransactionsController : Controller
         TempData["NewTransaction"] = JsonSerializer.Serialize(transaction);
 
         return Request.IsTurboFrameRequest("modal")
-            ? NoContent()
-            : RedirectToAction(nameof(NewTransactionItems));
+            ? Results.NoContent()
+            : Results.LocalRedirect("/transactions/new/items");
     }
 
     [HttpGet("new/items/edit/{id}")]
-    public IActionResult EditTransactionItem(Guid id)
+    public IResult EditTransactionItem(Guid id)
     {
         if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
         {
-            return RedirectToAction(nameof(NewTransaction));
+            return Results.LocalRedirect("/transactions/new");
         }
 
         var transactionItem = transaction.Items.SingleOrDefault(item => item.ItemId == id);
         if (transactionItem == null)
         {
-            return RedirectToAction(nameof(NewTransactionItems));
+            return Results.LocalRedirect("/transactions/new/items");
         }
 
-        var model = (transaction, transactionItem);
+        var parameters = new { Transaction = transaction, TransactionItem = transactionItem };
         return Request.IsTurboFrameRequest("modal")
-            ? View($"{nameof(EditTransactionItem)}_Modal", model)
-            : View(model);
+            ? new RazorComponentResult<EditTransactionItemModal>(parameters)
+            : new RazorComponentResult<EditTransactionItemPage>(parameters);
     }
 
     [HttpPost("new/items/edit/{id}")]
-    public async Task<IActionResult> EditTransactionItem(Guid id, string brand, string name, decimal price, int quantity)
+    public async Task<IResult> EditTransactionItem(Guid id, string brand, string name, decimal price, int quantity)
     {
         if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
         {
-            return RedirectToAction(nameof(NewTransaction));
+            return Results.LocalRedirect("/transactions/new");
         }
 
         var transactionItem = transaction.Items.SingleOrDefault(item => item.ItemId == id);
         if (transactionItem == null)
         {
-            return RedirectToAction(nameof(NewTransactionItems));
+            return Results.LocalRedirect("/transactions/new/items");
         }
 
         var itemId = await dbContext.Items
@@ -182,16 +182,16 @@ public class TransactionsController : Controller
         TempData["NewTransaction"] = JsonSerializer.Serialize(transaction);
 
         return Request.IsTurboFrameRequest("modal")
-            ? NoContent()
-            : RedirectToAction(nameof(NewTransactionItems));
+            ? Results.NoContent()
+            : Results.LocalRedirect("/transactions/new/items");
     }
 
     [HttpPost("new/items/delete/{id}")]
-    public IActionResult DeleteTransactionItem(Guid id)
+    public IResult DeleteTransactionItem(Guid id)
     {
         if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
         {
-            return RedirectToAction(nameof(NewTransaction));
+            return Results.LocalRedirect("/transactions/new");
         }
 
         var transactionItem = transaction.Items.SingleOrDefault(item => item.ItemId == id);
@@ -203,27 +203,27 @@ public class TransactionsController : Controller
         TempData["NewTransaction"] = JsonSerializer.Serialize(transaction);
 
         return Request.IsTurboFrameRequest("modal")
-            ? NoContent()
-            : RedirectToAction(nameof(NewTransactionItems));
+            ? Results.NoContent()
+            : Results.LocalRedirect("/transactions/new/items");
     }
 
     [HttpGet("new/promotions")]
-    public IActionResult NewTransactionPromotions()
+    public IResult NewTransactionPromotions()
     {
         if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
         {
-            return RedirectToAction(nameof(NewTransaction));
+            return Results.LocalRedirect("/transactions/new");
         }
 
-        return View(transaction);
+        return new RazorComponentResult<NewTransactionPromotionsPage>(new { Transaction = transaction });
     }
 
     [HttpPost("new/promotions")]
-    public async Task<IActionResult> PostNewTransactionPromotions()
+    public async Task<IResult> PostNewTransactionPromotions()
     {
         if (TempData["NewTransaction"] is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
         {
-            return RedirectToAction(nameof(NewTransaction));
+            return Results.LocalRedirect("/transactions/new");
         }
 
         // Work around EF trying to insert items by explicitly tracking them as unchanged
@@ -235,28 +235,29 @@ public class TransactionsController : Controller
         dbContext.Transactions.Add(transaction);
         await dbContext.SaveChangesAsync();
 
-        return RedirectToAction(nameof(Index), new { page = 1 });
+        return Results.LocalRedirect("/transactions?page=1");
     }
 
     [HttpGet("new/promotions/new")]
-    public IActionResult NewTransactionPromotion()
+    public IResult NewTransactionPromotion()
     {
         if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
         {
-            return RedirectToAction(nameof(NewTransaction));
+            return Results.LocalRedirect("/transactions/new");
         }
 
+        var parameters = new { Transaction = transaction };
         return Request.IsTurboFrameRequest("modal")
-            ? View($"{nameof(NewTransactionPromotion)}_Modal", transaction)
-            : View(transaction);
+            ? new RazorComponentResult<NewTransactionPromotionModal>(parameters)
+            : new RazorComponentResult<NewTransactionPromotionPage>(parameters);
     }
 
     [HttpPost("new/promotions/new")]
-    public IActionResult NewTransactionPromotion(string name, decimal amount, Guid[] itemIds)
+    public IResult NewTransactionPromotion(string name, decimal amount, Guid[] itemIds)
     {
         if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
         {
-            return RedirectToAction(nameof(NewTransaction));
+            return Results.LocalRedirect("/transactions/new");
         }
 
         // TODO: Handle promotion already in transaction - merge, replace, error?
@@ -267,42 +268,42 @@ public class TransactionsController : Controller
         TempData["NewTransaction"] = JsonSerializer.Serialize(transaction);
 
         return Request.IsTurboFrameRequest("modal")
-            ? NoContent()
-            : RedirectToAction(nameof(NewTransactionPromotions));
+            ? Results.NoContent()
+            : Results.LocalRedirect("/transactions/new/promotions");
     }
 
     [HttpGet("new/promotions/edit/{id}")]
-    public IActionResult EditTransactionPromotion(Guid id)
+    public IResult EditTransactionPromotion(Guid id)
     {
         if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
         {
-            return RedirectToAction(nameof(NewTransaction));
+            return Results.LocalRedirect("/transactions/new");
         }
 
         var promotion = transaction.Promotions.SingleOrDefault(promotion => promotion.Id == id);
         if (promotion == null)
         {
-            return RedirectToAction(nameof(NewTransactionPromotions));
+            return Results.LocalRedirect("/transactions/new/promotions");
         }
 
-        var model = (transaction, promotion);
+        var parameters = new { Transaction = transaction, Promotion = promotion };
         return Request.IsTurboFrameRequest("modal")
-            ? View($"{nameof(EditTransactionPromotion)}_Modal", model)
-            : View(model);
+            ? new RazorComponentResult<EditTransactionPromotionModal>(parameters)
+            : new RazorComponentResult<EditTransactionPromotionPage>(parameters);
     }
 
     [HttpPost("new/promotions/edit/{id}")]
-    public IActionResult EditTransactionPromotion(Guid id, string name, decimal amount, Guid[] itemIds)
+    public IResult EditTransactionPromotion(Guid id, string name, decimal amount, Guid[] itemIds)
     {
         if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
         {
-            return RedirectToAction(nameof(NewTransaction));
+            return Results.LocalRedirect("/transactions/new");
         }
 
         var promotion = transaction.Promotions.SingleOrDefault(promotion => promotion.Id == id);
         if (promotion == null)
         {
-            return RedirectToAction(nameof(NewTransactionPromotions));
+            return Results.LocalRedirect("/transactions/new/promotions");
         }
 
         promotion.Name = name;
@@ -312,16 +313,16 @@ public class TransactionsController : Controller
         TempData["NewTransaction"] = JsonSerializer.Serialize(transaction);
 
         return Request.IsTurboFrameRequest("modal")
-            ? NoContent()
-            : RedirectToAction(nameof(NewTransactionPromotions));
+            ? Results.NoContent()
+            : Results.LocalRedirect("/transactions/new/promotions");
     }
 
     [HttpPost("new/promotions/delete/{id}")]
-    public IActionResult DeleteTransactionPromotion(Guid id)
+    public IResult DeleteTransactionPromotion(Guid id)
     {
         if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
         {
-            return RedirectToAction(nameof(NewTransaction));
+            return Results.LocalRedirect("/transactions/new");
         }
 
         var promotion = transaction.Promotions.SingleOrDefault(promotion => promotion.Id == id);
@@ -333,7 +334,7 @@ public class TransactionsController : Controller
         TempData["NewTransaction"] = JsonSerializer.Serialize(transaction);
 
         return Request.IsTurboFrameRequest("modal")
-            ? NoContent()
-            : RedirectToAction(nameof(NewTransactionPromotions));
+            ? Results.NoContent()
+            : Results.LocalRedirect("/transactions/new/promotions");
     }
 }

@@ -1,0 +1,64 @@
+@using Groceries.Data
+@using Microsoft.EntityFrameworkCore
+
+@inject AppDbContext DbContext
+
+<form method="post" @attributes="AdditionalAttributes">
+    <div class="form-field">
+        <label class="form-field__label" for="transactionPromotionName">Name</label>
+        <div class="form-field__control input">
+            <input class="input__control" id="transactionPromotionName" name="name" value="@Promotion?.Name" required autofocus />
+        </div>
+    </div>
+
+    <div class="form-field">
+        <label class="form-field__label" for="transactionPromotionAmount">Amount</label>
+        <div class="form-field__control input">
+            @*<span class="input__inset">@CultureInfo.CurrentCulture.NumberFormat.CurrencySymbol</span>*@
+            <input class="input__control" id="transactionPromotionAmount" name="amount" value="@Promotion?.Amount" type="number" min="0" step="0.01" required />
+        </div>
+    </div>
+
+    <div class="form-field">
+        <label class="form-field__label" for="transactionPromotionItemIds">
+            Items <span class="form-field__corner-hint">Optional</span>
+        </label>
+        <select class="form-field__control select" id="transactionPromotionItemIds" name="itemIds" multiple>
+            @foreach (var item in Transaction.Items)
+            {
+                <option value="@item.ItemId" selected="@selectedItemIds.Contains(item.ItemId)">
+                    @itemNames.GetValueOrDefault(item.ItemId)
+                </option>
+            }
+        </select>
+    </div>
+
+    @ChildContent
+</form>
+
+@code {
+    [Parameter]
+    public required Transaction Transaction { get; set; }
+
+    [Parameter]
+    public TransactionPromotion? Promotion { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private Guid[] selectedItemIds = [];
+    private Dictionary<Guid, string> itemNames = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        selectedItemIds = Promotion?.Items.Select(item => item.Id).ToArray() ?? [];
+
+        var itemIds = Transaction.Items.Select(item => item.ItemId);
+        itemNames = await DbContext.Items
+            .Where(item => itemIds.Contains(item.Id))
+            .ToDictionaryAsync(item => item.Id, item => string.Concat(item.Brand, " ", item.Name));
+    }
+}

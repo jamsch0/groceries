@@ -1,22 +1,15 @@
-@using Groceries.Data;
-@using Microsoft.EntityFrameworkCore;
+@using Groceries.Data
+@using Microsoft.EntityFrameworkCore
 
-@inject AppDbContext dbContext
-@{
-    ViewBag.Title = "New Transaction";
+@layout Layout
 
-    var datetime = DateTime.Now.ToString("s");
+@inject AppDbContext DbContext
 
-    var stores = await dbContext.Stores
-        .OrderBy(store => store.Retailer!.Name)
-        .ThenBy(store => store.Name)
-        .Select(store => new { store.Id, Name = string.Concat(store.Retailer!.Name, " ", store.Name) })
-        .ToListAsync();
-}
+<PageTitle>Groceries &ndash; New Transaction</PageTitle>
 
 <h1>New Transaction</h1>
 
-<form method="post" asp-action="NewTransaction">
+<form method="post">
     <div class="form-field">
         <label class="form-field__label" for="transactionCreatedAt">Date</label>
         <div class="form-field__control input">
@@ -36,6 +29,22 @@
 
     <div class="row">
         <button class="button button--primary" type="submit">Next</button>
-        <a class="button" asp-action="Index">Cancel</a>
+        <a class="button" href="/transactions?page=1">Cancel</a>
     </div>
 </form>
+
+@code {
+    private record StoreModel(Guid Id, string Name);
+
+    private string datetime = DateTime.Now.ToString("s");
+    private StoreModel[] stores = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        stores = await DbContext.Stores
+            .OrderBy(store => store.Retailer!.Name)
+            .ThenBy(store => store.Name)
+            .Select(store => new StoreModel(store.Id, string.Concat(store.Retailer!.Name, " ", store.Name)))
+            .ToArrayAsync();
+    }
+}

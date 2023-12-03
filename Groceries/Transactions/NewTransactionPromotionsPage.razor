@@ -1,26 +1,23 @@
-@using Groceries.Data;
-@using Microsoft.EntityFrameworkCore;
+@using Groceries.Data
+@using Microsoft.EntityFrameworkCore
 
-@model Transaction
-@inject AppDbContext dbContext
-@{
-    ViewBag.Title = "New Transaction";
+@layout Layout
 
-    var store = await dbContext.Stores
-        .Where(store => store.Id == Model.StoreId)
-        .Select(store => string.Concat(store.Retailer!.Name, " ", store.Name))
-        .SingleAsync();
-}
+@inject AppDbContext DbContext
+
+<PageTitle>Groceries &ndash; New Transaction</PageTitle>
 
 <h1>New Transaction</h1>
 
-<div class="form-field">@Model.CreatedAt.ToShortDateString() @Model.CreatedAt.ToLongTimeString() &ndash; @store</div>
+<div class="form-field">
+    @Transaction.CreatedAt.ToShortDateString() @Transaction.CreatedAt.ToLongTimeString() &ndash; @store
+</div>
 
-<form method="post" asp-action="NewTransactionPromotions">
+<form method="post">
     <div class="card form-field">
         <div class="card__header row">
             <h2 class="row__fill">Promotions</h2>
-            <a class="button button--primary" asp-action="NewTransactionPromotion" autofocus data-turbo-frame="modal">
+            <a class="button button--primary" href="/transactions/new/promotions/new" autofocus data-turbo-frame="modal">
                 New promotion
             </a>
         </div>
@@ -36,20 +33,20 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var promotion in Model.Promotions)
+                    @foreach (var promotion in Transaction.Promotions)
                     {
                         <tr>
                             <td class="table__cell table__cell--compact">
                                 @promotion.Name
                             </td>
                             <td class="table__cell table__cell--compact table__cell--numeric">
-                                @promotion.Items.Sum(item => Model.Items.Single(i => i.ItemId == item.Id).Quantity)
+                                @promotion.Items.Sum(item => Transaction.Items.Single(i => i.ItemId == i.ItemId).Quantity)
                             </td>
                             <td class="table__cell table__cell--compact table__cell--numeric">
                                 @((-promotion.Amount).ToString("c"))
                             </td>
                             <td class="table__cell table__cell--compact">
-                                <a class="link" asp-action="EditTransactionPromotion" asp-route-id="@promotion.Id" data-turbo-frame="modal">Edit</a>
+                                <a class="link" href="/transactions/new/promotions/edit/@promotion.Id" data-turbo-frame="modal">Edit</a>
                             </td>
                         </tr>
                     }
@@ -58,7 +55,7 @@
                     <tr>
                         <td class="table__cell table__cell--compact table__cell--total" colspan="3">Total</td>
                         <td class="table__cell table__cell--compact table__cell--numeric table__cell--total">
-                            @Model.Total.ToString("c")
+                            @Transaction.Total.ToString("c")
                         </td>
                         <td class="table__cell table__cell--compact"></td>
                     </tr>
@@ -68,7 +65,22 @@
     </div>
 
     <div class="row">
-        <button class="button button--primary" type="submit" @(Model.Items.Count == 0 ? "disabled" : "")>Save</button>
-        <a class="button" asp-action="NewTransactionItems">Back</a>
+        <button class="button button--primary" type="submit" disabled="@(Transaction.Items.Count == 0)">Save</button>
+        <a class="button" href="/transactions/new/items">Back</a>
     </div>
 </form>
+
+@code {
+    [Parameter]
+    public required Transaction Transaction { get; set; }
+
+    private string store = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        store = await DbContext.Stores
+            .Where(store => store.Id == Transaction.StoreId)
+            .Select(store => string.Concat(store.Retailer!.Name, " ", store.Name))
+            .SingleAsync();
+    }
+}

@@ -1,31 +1,23 @@
-@using Groceries.Data;
-@using Microsoft.EntityFrameworkCore;
+@using Groceries.Data
+@using Microsoft.EntityFrameworkCore
 
-@model Transaction
-@inject AppDbContext dbContext
-@{
-    ViewBag.Title = "New Transaction";
+@layout Layout
 
-    var store = await dbContext.Stores
-        .Where(store => store.Id == Model.StoreId)
-        .Select(store => string.Concat(store.Retailer!.Name, " ", store.Name))
-        .SingleAsync();
+@inject AppDbContext DbContext
 
-    var itemIds = Model.Items.Select(item => item.ItemId);
-    var itemNames = await dbContext.Items
-        .Where(item => itemIds.Contains(item.Id))
-        .ToDictionaryAsync(item => item.Id, item => string.Concat(item.Brand, " ", item.Name));
-}
+<PageTitle>Groceries &ndash; New Transaction</PageTitle>
 
 <h1>New Transaction</h1>
 
-<div class="form-field">@Model.CreatedAt.ToShortDateString() @Model.CreatedAt.ToLongTimeString() &ndash; @store</div>
+<div class="form-field">
+    @Transaction.CreatedAt.ToShortDateString() @Transaction.CreatedAt.ToLongTimeString() &ndash; @store
+</div>
 
-<form method="post" asp-action="NewTransactionItems">
+<form method="post">
     <div class="card form-field">
         <div class="card__header row">
             <h2 class="row__fill">Items</h2>
-            <a class="button button--primary" asp-action="NewTransactionItem" autofocus data-turbo-frame="modal">New item</a>
+            <a class="button button--primary" href="/transactions/new/items/new" autofocus data-turbo-frame="modal">New item</a>
         </div>
 
         <div class="card__content card__content--table">
@@ -40,11 +32,11 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var item in Model.Items)
+                    @foreach (var item in Transaction.Items)
                     {
                         <tr>
                             <td class="table__cell table__cell--compact">
-                                @itemNames[item.ItemId]
+                                @itemNames.GetValueOrDefault(item.ItemId)
                             </td>
                             <td class="table__cell table__cell--compact table__cell--numeric">
                                 @item.Price.ToString("c")
@@ -56,7 +48,7 @@
                                 @item.Amount.ToString("c")
                             </td>
                             <td class="table__cell table__cell--compact">
-                                <a class="link" asp-action="EditTransactionItem" asp-route-id="@item.ItemId" data-turbo-frame="modal">Edit</a>
+                                <a class="link" href="/transactions/new/items/edit/@item.ItemId" data-turbo-frame="modal">Edit</a>
                             </td>
                         </tr>
                     }
@@ -65,7 +57,7 @@
                     <tr>
                         <td class="table__cell table__cell--compact table__cell--total" colspan="3">Subtotal</td>
                         <td class="table__cell table__cell--compact table__cell--numeric table__cell--total">
-                            @Model.Items.Sum(item => item.Amount).ToString("c")
+                            @Transaction.Items.Sum(item => item.Amount).ToString("c")
                         </td>
                         <td class="table__cell table__cell--compact"></td>
                     </tr>
@@ -75,7 +67,28 @@
     </div>
 
     <div class="row">
-        <button class="button button--primary" type="submit" @(Model.Items.Count == 0 ? "disabled" : "")>Next</button>
-        <a class="button" asp-action="NewTransaction">Back</a>
+        <button class="button button--primary" type="submit" disabled="@(Transaction.Items.Count == 0)">Next</button>
+        <a class="button" href="/transactions/new">Back</a>
     </div>
 </form>
+
+@code {
+    [Parameter]
+    public required Transaction Transaction { get; set; }
+
+    private string store = string.Empty;
+    private Dictionary<Guid, string> itemNames = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        store = await DbContext.Stores
+            .Where(store => store.Id == Transaction.StoreId)
+            .Select(store => string.Concat(store.Retailer!.Name, " ", store.Name))
+            .SingleAsync();
+
+        var itemIds = Transaction.Items.Select(item => item.ItemId);
+        itemNames = await DbContext.Items
+            .Where(item => itemIds.Contains(item.Id))
+            .ToDictionaryAsync(item => item.Id, item => string.Concat(item.Brand, " ", item.Name));
+    }
+}
