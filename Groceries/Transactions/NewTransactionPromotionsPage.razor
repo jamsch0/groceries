@@ -40,7 +40,7 @@
                                 @promotion.Name
                             </td>
                             <td class="table__cell table__cell--compact table__cell--numeric">
-                                @promotion.Items.Sum(item => Transaction.Items.Single(i => i.ItemId == i.ItemId).Quantity)
+                                @promotion.Items.Sum(item => Transaction.Items.Single(i => i.ItemId == item.Id).Quantity)
                             </td>
                             <td class="table__cell table__cell--compact table__cell--numeric">
                                 @((-promotion.Amount).ToString("c"))
@@ -53,7 +53,7 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td class="table__cell table__cell--compact table__cell--total" colspan="3">Total</td>
+                        <td class="table__cell table__cell--compact table__cell--total" colspan="2">Total</td>
                         <td class="table__cell table__cell--compact table__cell--numeric table__cell--total">
                             @Transaction.Total.ToString("c")
                         </td>
