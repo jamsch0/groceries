@@ -21,7 +21,7 @@
             <legend class="form-field__label">Item</legend>
             <div class="form-field__control input">
                 <input class="input__control flex-2" name="brand" value="@selectedItem?.Brand" placeholder="Brand" list="itemBrands" autocomplete="off" required autofocus data-action="transaction-item-form#filterNames transaction-item-form#setPriceAndQuantity" data-transaction-item-form-target="brand" />
-                <input class="input__control flex-5" name="name" value="@selectedItem?.Name" placeholder="Name" list="itemNames" autocomplete="off" required data-action="transaction-item-form#filterNames transaction-item-form#setPriceAndQuantity" />
+                <input class="input__control flex-5" name="name" value="@selectedItem?.Name" placeholder="Name" list="itemNames" autocomplete="off" required data-action="transaction-item-form#setPriceAndQuantity" />
 
                 <datalist id="itemBrands">
                     @foreach (var item in items.DistinctBy(item => item.Brand))
