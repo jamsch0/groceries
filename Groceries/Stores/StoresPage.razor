@@ -2,79 +2,68 @@
 @using Microsoft.EntityFrameworkCore
 
 @layout Layout
-
 @inject AppDbContext DbContext
-@inject NavigationManager Navigation
-@inject IHttpContextAccessor HttpContextAccessor
 
 <PageTitle>Groceries &ndash; Stores</PageTitle>
 
-<div class="row">
+<header class="row">
     <h1 class="row__fill">Stores</h1>
-    <SearchForm data-turbo-frame="table" data-turbo-action="advance">
-        <input type="hidden" name="page" value="1" />
-    </SearchForm>
+    <search title="Stores">
+        <SearchForm data-turbo-frame="table" data-turbo-action="advance">
+            <input type="hidden" name="page" value="1" />
+        </SearchForm>
+    </search>
     <a class="button button--primary" href="/stores/new" data-turbo-frame="modal">New store</a>
-</div>
+</header>
 
-<turbo-frame id="table" target="top">
+<turbo-frame id="table" target="_top">
     <section class="table">
-        <table>
-            <thead>
-                <tr>
-                    <th scope="col" class="table__header table__header--shaded">Retailer</th>
-                    <th scope="col" class="table__header table__header--shaded" style="width: 100%">Name</th>
-                    <th scope="col" class="table__header table__header--shaded">Transactions</th>
-                    <th scope="col" class="table__header table__header--shaded"></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var store in stores)
-                {
-                    <tr>
-                        <td class="table__cell">@store.Retailer</td>
-                        <td class="table__cell">@store.Name</td>
-                        <td class="table__cell table__cell--numeric">@store.TransactionsCount</td>
-                        <td class="table__cell">
-                            <a class="link" href="/stores/edit/@store.Id" data-turbo-frame="modal">Edit</a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-        <TablePaginator Model="stores" />
+        <Table Items="stores" Pagination="pagination" HeaderClass="table__header--shaded">
+            <PropertyTableColumn Property="s => s.Retailer" Sortable="true" />
+            <PropertyTableColumn Property="s => s.Name" Fill="true" Sortable="true" />
+            <PropertyTableColumn Property="s => s.TransactionsCount" Title="Transactions" Sortable="true" />
+            <TemplateTableColumn Context="store">
+                <a class="link" href="/stores/edit/@store.Id" data-turbo-frame="modal">Edit</a>
+            </TemplateTableColumn>
+        </Table>
+        <TablePaginator State="pagination" />
     </section>
 </turbo-frame>
 
 @code {
-    [SupplyParameterFromQuery]
-    public int? Page { get; set; }
+    private record StoreModel
+    {
+        public Guid Id { get; init; }
+        public required string Retailer { get; init; }
+        public required string Name { get; init; }
+        public int TransactionsCount { get; init; }
+    }
+
+    private IQueryable<StoreModel> stores = null!;
+    private PaginationState pagination = new();
 
     [SupplyParameterFromQuery]
     public string? Search { get; set; }
 
-    private record StoreModel(Guid Id, string Retailer, string Name, int TransactionsCount);
-
-    private ListPageModel<StoreModel> stores = ListPageModel.Empty<StoreModel>();
-
-    protected override async Task OnParametersSetAsync()
+    protected override void OnParametersSet()
     {
         var storesQuery = DbContext.Stores.AsQueryable();
         if (!string.IsNullOrEmpty(Search))
         {
             var searchPattern = $"%{Search}%";
-            storesQuery = storesQuery.Where(store => EF.Functions.ILike(store.Retailer!.Name + ' ' + store.Name, searchPattern));
+            storesQuery = storesQuery
+                .Where(store => EF.Functions.ILike(store.Retailer!.Name + ' ' + store.Name, searchPattern));
         }
 
-        stores = await storesQuery
-            .OrderBy(store => store.Retailer!.Name)
-            .ThenBy(store => store.Name)
-            .Select(store => new StoreModel(store.Id, store.Retailer!.Name, store.Name, store.Transactions!.Count()))
-            .ToListPageModelAsync(Page.GetValueOrDefault(), cancellationToken: HttpContextAccessor.HttpContext!.RequestAborted);
-
-        if (stores.Page != Page)
-        {
-            Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("page", stores.Page));
-        }
+        stores = storesQuery
+            .Select(store => new StoreModel
+            {
+                Id = store.Id,
+                Retailer = store.Retailer!.Name,
+                Name = store.Name,
+                TransactionsCount = store.Transactions!.Count(),
+            })
+            .OrderBy(store => store.Retailer)
+            .ThenBy(store => store.Name);
     }
 }

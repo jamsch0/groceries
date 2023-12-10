@@ -1,0 +1,207 @@
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.EntityFrameworkCore.Query
+
+@typeparam TItem
+@attribute [CascadingTypeParameter(nameof(TItem))]
+
+@inject NavigationManager Navigation
+
+<table>
+    <CascadingValue IsFixed="true" Value="this">@ChildContent</CascadingValue>
+    <thead>
+        <tr>
+            @foreach (var column in columns)
+            {
+                <th scope="col"
+                    class="@GetHeaderClass(column)"
+                    style="@(column.Fill ? "width: 100%" : null)"
+                    aria-sort="@GetAriaSortValue(column)"
+                >
+                    @if (column.Sortable)
+                    {
+                        <a href="@GetUriForColumnSort(column)">@column.HeaderContent</a>
+                    }
+                    else
+                    {
+                        @column.HeaderContent
+                    }
+                </th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in currentPageItems)
+        {
+            <tr>
+                @foreach (var column in columns)
+                {
+                    <td class="@GetCellClass(column)">
+                        @column.CellContent(item)
+                    </td>
+                }
+            </tr>
+        }
+    </tbody>
+    @if (FooterContent != null)
+    {
+        <tfoot>@FooterContent</tfoot>
+    }
+</table>
+
+@code {
+    private readonly List<TableColumn<TItem>> columns = [];
+    private TItem[] currentPageItems = [];
+    private IQueryable<TItem>? lastAssignedItems;
+    private int? lastLoadedPaginationStateHash;
+
+    [Parameter, EditorRequired]
+    public required IQueryable<TItem> Items { get; set; }
+
+    [Parameter]
+    public PaginationState? Pagination { get; set; }
+
+    [Parameter]
+    public string? HeaderClass { get; set; }
+
+    [Parameter]
+    public string? CellClass { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? FooterContent { get; set; }
+
+    [SupplyParameterFromQuery(Name = "page")]
+    private int CurrentPage { get; set; }
+
+    [SupplyParameterFromQuery(Name = "sort")]
+    private string? SortKey { get; set; }
+
+    [SupplyParameterFromQuery(Name = "desc")]
+    private bool SortDescending { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var dataSourceHasChanged = Items != lastAssignedItems;
+        if (dataSourceHasChanged)
+        {
+            lastAssignedItems = Items;
+        }
+
+        if (Pagination != null)
+        {
+            Pagination.CurrentPage = CurrentPage;
+        }
+
+        if (dataSourceHasChanged || Pagination?.GetHashCode() != lastLoadedPaginationStateHash)
+        {
+            await LoadDataAsync();
+        }
+    }
+
+    internal void AddColumn(TableColumn<TItem> column)
+    {
+        columns.Add(column);
+        StateHasChanged();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        await LoadDataCoreAsync();
+        lastLoadedPaginationStateHash = Pagination?.GetHashCode();
+    }
+
+    private async Task LoadDataCoreAsync()
+    {
+        if (Pagination?.CurrentPage < 1)
+        {
+            Pagination.CurrentPage = 1;
+            NavigateToCurrentPage();
+            return;
+        }
+
+        var totalCount = Items.Provider is IAsyncQueryProvider
+            ? await Items.CountAsync()
+            : Items.Count();
+
+        var itemsQuery = Items;
+        if (SortKey != null &&
+            columns
+                .Select(column => column.SortBy)
+                .SingleOrDefault(sortBy => sortBy?.Key == SortKey) is DataSort<TItem> sortBy)
+        {
+            itemsQuery = sortBy.Apply(itemsQuery, SortDescending);
+        }
+
+        if (Pagination != null)
+        {
+            Pagination.TotalItemCount = totalCount;
+
+            if (Pagination.LastPage < Pagination.CurrentPage)
+            {
+                Pagination.CurrentPage = Pagination.LastPage;
+                NavigateToCurrentPage();
+                return;
+            }
+
+            itemsQuery = itemsQuery
+                .Skip(Pagination.Offset)
+                .Take(Pagination.PageSize);
+        }
+
+        currentPageItems = Items.Provider is IAsyncQueryProvider
+            ? await itemsQuery.ToArrayAsync()
+            : itemsQuery.ToArray();
+
+        if (Pagination != null)
+        {
+            Pagination.ItemCount = currentPageItems.Length;
+        }
+
+        StateHasChanged();
+    }
+
+    private void NavigateToCurrentPage()
+    {
+        Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("page", Pagination!.CurrentPage));
+    }
+
+    private string? GetAriaSortValue(TableColumn<TItem> column)
+        => column.Sortable && SortKey == column.SortBy!.Key
+            ? (SortDescending ? "descending" : "ascending")
+            : null;
+
+    private string GetHeaderClass(TableColumn<TItem> column)
+    {
+        string?[] classes = [
+            "table__header",
+            column.Sortable ? "table__header--sortable" : null,
+            HeaderClass,
+        ];
+        return string.Join(' ', classes.Where(c => c != null));
+    }
+
+    private string GetCellClass(TableColumn<TItem> column)
+    {
+        string?[] classes = [
+            "table__cell",
+            column.Align switch
+            {
+                Align.Center => "table__cell--align-center",
+                Align.End => "table__cell--align-end",
+                _ => null,
+            },
+            CellClass,
+        ];
+        return string.Join(' ', classes.Where(c => c != null));
+    }
+
+    private string GetUriForColumnSort(TableColumn<TItem> column)
+    => Navigation.GetUriWithQueryParameters(new Dictionary<string, object?>
+        {
+            { "page", 1 },
+            { "sort", SortKey == column.SortBy!.Key && SortDescending ? null : column.SortBy.Key},
+            { "desc", SortKey != column.SortBy!.Key || SortDescending ? null : "true" },
+        });
+}

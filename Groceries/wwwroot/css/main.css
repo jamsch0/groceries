@@ -91,11 +91,13 @@ h1, h2, h3, h4, h5, h6 {
 
 .icon {
     fill: currentColor;
+    font-size: 1.5rem;
     height: 1.5rem;
     width: 1.5rem;
 }
 
 .icon--sm {
+    font-size: 1.25rem;
     height: 1.25rem;
     width: 1.25rem;
 }
@@ -359,11 +361,11 @@ html:has(.modal[open]) {
     margin-left: 0.3rem;
 }
 
-.table__header--sortable a[data-dir=asc]::after {
+.table__header--sortable[aria-sort=ascending] a::after {
     content: "\25B2";
 }
 
-.table__header--sortable a[data-dir=desc]::after {
+.table__header--sortable[aria-sort=descending] a::after {
     content: "\25BC";
 }
 
@@ -379,17 +381,17 @@ html:has(.modal[open]) {
     white-space: nowrap;
 }
 
+.table__cell--align-center {
+    text-align: center;
+}
+
+.table__cell--align-end {
+    text-align: end;
+}
+
 .table__cell--compact {
     line-height: 1rem;
     padding-block: 0.75rem;
-}
-
-.table__cell--icon {
-    font-size: 1.25rem;
-}
-
-.table__cell--numeric {
-    text-align: end;
 }
 
 .table__cell--total {

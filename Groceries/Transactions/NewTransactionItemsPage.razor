@@ -2,7 +2,6 @@
 @using Microsoft.EntityFrameworkCore
 
 @layout Layout
-
 @inject AppDbContext DbContext
 
 <PageTitle>Groceries &ndash; New Transaction</PageTitle>
@@ -14,57 +13,45 @@
 </div>
 
 <form method="post">
-    <div class="card form-field">
+    <section class="card form-field">
         <div class="card__header row">
             <h2 class="row__fill">Items</h2>
-            <a class="button button--primary" href="/transactions/new/items/new" autofocus data-turbo-frame="modal">New item</a>
+            <a class="button button--primary" href="/transactions/new/items/new" autofocus data-turbo-frame="modal">
+                New item
+            </a>
         </div>
 
         <div class="card__content card__content--table">
-            <table>
-                <thead>
-                    <tr>
-                        <th scope="col" class="table__header" style="width: 100%">Name</th>
-                        <th scope="col" class="table__header">Price</th>
-                        <th scope="col" class="table__header"><abbr title="Quantity">Qty</abbr></th>
-                        <th scope="col" class="table__header">Amount</th>
-                        <th scope="col" class="table__header"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Transaction.Items)
-                    {
-                        <tr>
-                            <td class="table__cell table__cell--compact">
-                                @itemNames.GetValueOrDefault(item.ItemId)
-                            </td>
-                            <td class="table__cell table__cell--compact table__cell--numeric">
-                                @item.Price.ToString("c")
-                            </td>
-                            <td class="table__cell table__cell--compact table__cell--numeric">
-                                @item.Quantity
-                            </td>
-                            <td class="table__cell table__cell--compact table__cell--numeric">
-                                @item.Amount.ToString("c")
-                            </td>
-                            <td class="table__cell table__cell--compact">
-                                <a class="link" href="/transactions/new/items/edit/@item.ItemId" data-turbo-frame="modal">Edit</a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-                <tfoot>
+            <Table Items="Transaction.Items.AsQueryable()" CellClass="table__cell--compact">
+                <ChildContent>
+                    <TemplateTableColumn Title="Name" Fill="true" Context="item">
+                        @itemNames.GetValueOrDefault(item.ItemId)
+                    </TemplateTableColumn>
+                    <PropertyTableColumn Property="i => i.Price" Format="c" />
+                    <PropertyTableColumn Property="i => i.Quantity">
+                        <HeaderContent>
+                            <abbr title="Quantity">Qty</abbr>
+                        </HeaderContent>
+                    </PropertyTableColumn>
+                    <PropertyTableColumn Property="i => i.Amount" Format="c" />
+                    <TemplateTableColumn Context="item">
+                        <a class="link" href="/transactions/new/items/edit/@item.ItemId" data-turbo-frame="modal">
+                            Edit
+                        </a>
+                    </TemplateTableColumn>
+                </ChildContent>
+                <FooterContent>
                     <tr>
                         <td class="table__cell table__cell--compact table__cell--total" colspan="3">Subtotal</td>
-                        <td class="table__cell table__cell--compact table__cell--numeric table__cell--total">
+                        <td class="table__cell table__cell--compact table__cell--total table__cell--align-end">
                             @Transaction.Items.Sum(item => item.Amount).ToString("c")
                         </td>
                         <td class="table__cell table__cell--compact"></td>
                     </tr>
-                </tfoot>
-            </table>
+                </FooterContent>
+            </Table>
         </div>
-    </div>
+    </section>
 
     <div class="row">
         <button class="button button--primary" type="submit" disabled="@(Transaction.Items.Count == 0)">Next</button>
@@ -73,11 +60,11 @@
 </form>
 
 @code {
-    [Parameter]
-    public required Transaction Transaction { get; set; }
-
     private string store = string.Empty;
     private Dictionary<Guid, string> itemNames = new();
+
+    [Parameter]
+    public required Transaction Transaction { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {

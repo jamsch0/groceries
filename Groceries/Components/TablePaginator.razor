@@ -1,34 +1,42 @@
 @inject NavigationManager Navigation
 
-<div class="table__paginator">
+<footer class="table__paginator">
     <span>
-        Showing @FirstItem to @LastItem of @Model.Total results
+        Showing @FirstItem to @LastItem of @State.TotalItemCount results
     </span>
     <nav class="button-group">
-        @if (Model.Page == 1)
+        @if (State.CurrentPage == 1)
         {
             <span class="link link--disabled">Previous</span>
         }
         else
         {
-            <a class="link" href="@Navigation.GetUriWithQueryParameter("page", Model.Page - 1)">Previous</a>
+            <a class="link" href="@GetUriForPage(State.CurrentPage - 1)">Previous</a>
         }
 
-        @if (Model.Page == Model.LastPage)
+        @if (State.CurrentPage == State.LastPage)
         {
             <span class="link link--disabled">Next</span>
         }
         else
         {
-            <a class="link" href="@Navigation.GetUriWithQueryParameter("page", Model.Page + 1)">Next</a>
+            <a class="link" href="@GetUriForPage(State.CurrentPage + 1)">Next</a>
         }
     </nav>
-</div>
+</footer>
 
 @code {
     [Parameter, EditorRequired]
-    public required IListPageModel Model { get; set; }
+    public required PaginationState State { get; set; }
 
-    private int FirstItem => Model.Count > 0 ? Model.Offset + 1 : 0;
-    private int LastItem => Model.Offset + Model.Count;
+    private int FirstItem => State.TotalItemCount > 0 ? State.Offset + 1 : 0;
+    private int LastItem => State.Offset + State.ItemCount;
+
+    protected override void OnParametersSet()
+    {
+        State.ItemCountChanged += (_, _) => StateHasChanged();
+    }
+
+    private string GetUriForPage(int page)
+        => Navigation.GetUriWithQueryParameter("page", page);
 }

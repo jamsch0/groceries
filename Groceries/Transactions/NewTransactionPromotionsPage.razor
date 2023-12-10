@@ -2,7 +2,6 @@
 @using Microsoft.EntityFrameworkCore
 
 @layout Layout
-
 @inject AppDbContext DbContext
 
 <PageTitle>Groceries &ndash; New Transaction</PageTitle>
@@ -14,55 +13,42 @@
 </div>
 
 <form method="post">
-    <div class="card form-field">
-        <div class="card__header row">
+    <section class="card form-field">
+        <header class="card__header row">
             <h2 class="row__fill">Promotions</h2>
             <a class="button button--primary" href="/transactions/new/promotions/new" autofocus data-turbo-frame="modal">
                 New promotion
             </a>
-        </div>
+        </header>
 
         <div class="card__content card__content--table">
-            <table>
-                <thead>
-                    <tr>
-                        <th scope="col" class="table__header" style="width: 100%">Name</th>
-                        <th scope="col" class="table__header">Items</th>
-                        <th scope="col" class="table__header">Amount</th>
-                        <th scope="col" class="table__header"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var promotion in Transaction.Promotions)
-                    {
-                        <tr>
-                            <td class="table__cell table__cell--compact">
-                                @promotion.Name
-                            </td>
-                            <td class="table__cell table__cell--compact table__cell--numeric">
-                                @promotion.Items.Sum(item => Transaction.Items.Single(i => i.ItemId == item.Id).Quantity)
-                            </td>
-                            <td class="table__cell table__cell--compact table__cell--numeric">
-                                @((-promotion.Amount).ToString("c"))
-                            </td>
-                            <td class="table__cell table__cell--compact">
-                                <a class="link" href="/transactions/new/promotions/edit/@promotion.Id" data-turbo-frame="modal">Edit</a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-                <tfoot>
+            <Table Items="Transaction.Promotions.AsQueryable()" CellClass="table__cell--compact">
+                <ChildContent>
+                    <PropertyTableColumn Property="p => p.Name" Fill="true" />
+                    <TemplateTableColumn Title="Items" Align="Align.End" Context="promotion">
+                        @promotion.Items.Sum(item => Transaction.Items.Single(i => i.ItemId == item.Id).Quantity)
+                    </TemplateTableColumn>
+                    <PropertyTableColumn Property="p => p.Amount" Context="amount">
+                        @((-amount).ToString("c"))
+                    </PropertyTableColumn>
+                    <TemplateTableColumn Context="promotion">
+                        <a class="link" href="/transactions/new/promotions/edit/@promotion.Id" data-turbo-frame="modal">
+                            Edit
+                        </a>
+                    </TemplateTableColumn>
+                </ChildContent>
+                <FooterContent>
                     <tr>
                         <td class="table__cell table__cell--compact table__cell--total" colspan="2">Total</td>
-                        <td class="table__cell table__cell--compact table__cell--numeric table__cell--total">
+                        <td class="table__cell table__cell--compact table__cell--total table__cell--align-end">
                             @Transaction.Total.ToString("c")
                         </td>
                         <td class="table__cell table__cell--compact"></td>
                     </tr>
-                </tfoot>
-            </table>
+                </FooterContent>
+            </Table>
         </div>
-    </div>
+    </section>
 
     <div class="row">
         <button class="button button--primary" type="submit" disabled="@(Transaction.Items.Count == 0)">Save</button>
@@ -71,10 +57,10 @@
 </form>
 
 @code {
+    private string store = string.Empty;
+
     [Parameter]
     public required Transaction Transaction { get; set; }
-
-    private string store = string.Empty;
 
     protected override async Task OnParametersSetAsync()
     {
