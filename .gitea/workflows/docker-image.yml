@@ -10,10 +10,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
-      packages: write
-
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -21,27 +17,27 @@ jobs:
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Login to GitHub Container Registry
-        if: github.event_name != 'pull_request'
+      - name: Login to Container Registry
+        if: gitea.event_name != 'pull_request'
         uses: docker/login-action@v2
         with:
-          registry: ghcr.io
-          username: ${{github.actor}}
-          password: ${{secrets.GITHUB_TOKEN}}
+          registry: git.jamsch0.dev
+          username: ${{gitea.actor}}
+          password: ${{secrets.CI_TOKEN}}
 
       - name: Extract metadata
         uses: docker/metadata-action@v4
         id: meta
         with:
-          images: ghcr.io/jamsch0/groceries
+          images: git.jamsch0.dev/jamsch0/groceries
           tags: type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
           context: .
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          push: ${{github.event_name != 'pull_request'}}
+          # cache-from: type=gha
+          # cache-to: type=gha,mode=max
+          push: ${{gitea.event_name != 'pull_request'}}
           tags: ${{steps.meta.outputs.tags}}
           labels: ${{steps.meta.outputs.labels}}
