@@ -2,12 +2,12 @@
 An application for (manually) tracking your grocery shopping habits.
 
 ## Installation
-A pre-built image is available at [ghcr.io/jamsch0/groceries](https://ghcr.io/jamsch0/groceries).
+A pre-built image is available at [git.jamsch0.dev/jamsch0/groceries](https://git.jamsch0.dev/jamsch0/-/packages/container/groceries).
 The default configuration can be found in `config.ini` once the volume has been created.
 
 Example usage:
 ```bash
-$ docker run -d -p 8080:80 -e LANG=en_GB TZ=Europe/London -v ./groceries:/config ghcr.io/jamsch0/groceries
+$ docker run -d -p 8080:80 -e LANG=en_GB TZ=Europe/London -v ./groceries:/config git.jamsch0.dev/jamsch0/groceries
 ```
 
 ## Configuration
