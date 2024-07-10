@@ -3,7 +3,7 @@
     "defaultProvider": "unpkg",
     "libraries": [
         {
-            "library": "@hotwired/turbo@7.3.0",
+            "library": "@hotwired/turbo@8.0.4",
             "destination": "wwwroot/lib/hotwired/turbo/"
         },
         {

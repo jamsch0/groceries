@@ -19,19 +19,3 @@ document.addEventListener("turbo:render", () => {
         timeout = setTimeout(() => document.getElementById("sidebarToggle").checked = false, 500);
     }
 });
-
-let transition;
-document.addEventListener("turbo:before-render", async event => {
-    if (document.startViewTransition) {
-        event.preventDefault();
-
-        if (transition == undefined) {
-            transition = document.startViewTransition(() => event.detail.resume());
-            await transition.finished;
-            transition = undefined;
-        } else {
-            await transition.finished;
-            event.detail.resume();
-        }
-    }
-});
