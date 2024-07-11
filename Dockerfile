@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7-labs
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build1
+FROM mcr.microsoft.com/dotnet/sdk:9.0-preview-alpine AS build1
 
 WORKDIR /src
 COPY ./.config ./
@@ -10,7 +10,7 @@ WORKDIR Groceries
 COPY ./Groceries/libman.json ./
 RUN dotnet libman restore
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build2
+FROM mcr.microsoft.com/dotnet/sdk:9.0-preview-alpine AS build2
 
 WORKDIR /src
 COPY ./Groceries.sln ./
@@ -23,7 +23,7 @@ COPY . ./
 COPY --from=build1 /src ./
 RUN dotnet publish --no-restore --output /out
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine-composite AS base
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-preview-alpine-composite AS base
 WORKDIR /groceries
 
 COPY --from=build2 /out .
