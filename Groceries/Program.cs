@@ -51,11 +51,12 @@ builder.Services.AddDbContextPool<AppDbContext>(options => options
 
 var app = builder.Build();
 
-app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
 
-app.MapControllers();
+app.MapStaticAssets();
+app.MapControllers()
+    .WithStaticAssets();
 
 await app.RunAsync();
 

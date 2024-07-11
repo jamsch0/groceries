@@ -9,10 +9,12 @@
     <meta name="view-transition" content="same-origin" />
     <meta name="turbo-prefetch" content="false" />
 
-    <link rel="stylesheet" type="text/css" href="/css/main.css" asp-append-version="true" data-turbo-track="reload" />
+    <link rel="stylesheet" type="text/css" href="@Assets["css/main.css"]" data-turbo-track="reload" />
 
-    <script type="module" src="/js/main.js" asp-append-version="true" data-turbo-track="reload"></script>
-    <script type="module" src="/lib/hotwired/turbo/dist/turbo.es2017-esm.js"></script>
+    <ImportMap />
+
+    <script type="module" src="@Assets["js/main.js"]" data-turbo-track="reload"></script>
+    <script type="module" src="@Assets["lib/hotwired/turbo/dist/turbo.es2017-esm.js"]"></script>
 
     <HeadOutlet />
 </head>
