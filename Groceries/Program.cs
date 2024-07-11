@@ -1,7 +1,6 @@
 using DbUp;
 using Groceries.Data;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,13 +28,6 @@ if (!dbUpgradeResult.Successful)
     return -1;
 }
 
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders = ForwardedHeaders.All;
-    options.KnownNetworks.Clear();
-    options.KnownProxies.Clear();
-});
-
 var dataProtection = builder.Services.AddDataProtection();
 if (env.IsProduction())
 {
@@ -59,7 +51,6 @@ builder.Services.AddDbContextPool<AppDbContext>(options => options
 
 var app = builder.Build();
 
-app.UseForwardedHeaders();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
