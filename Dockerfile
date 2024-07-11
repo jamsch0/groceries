@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.7-labs
+
 FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build1
 
 WORKDIR /src
@@ -14,8 +16,7 @@ WORKDIR /src
 COPY ./Groceries.sln ./
 COPY ./Directory.Build.props ./
 
-COPY */*.csproj ./
-RUN for file in $(ls *.csproj); do mkdir -p ${file%.*} && mv $file ${file%.*}; done
+COPY --parents */*.csproj .
 RUN dotnet restore
 
 COPY . ./
