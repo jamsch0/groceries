@@ -7,7 +7,7 @@
             "destination": "wwwroot/lib/inter/"
         },
         {
-            "library": "@hotwired/turbo@8.0.4",
+            "library": "@hotwired/turbo@8.0.10",
             "destination": "wwwroot/lib/hotwired/turbo/"
         },
         {
