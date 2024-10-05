@@ -76,7 +76,16 @@ public class TransactionsController : Controller
                 .FirstOrDefaultAsync();
 
             item ??= new Item(id: default);
-            item.Barcodes.Add(new ItemBarcode(item.Id, barcodeData.Value, barcodeFormat));
+
+            var barcode = new ItemBarcode(item.Id, barcodeData.Value, barcodeFormat);
+            item.Barcodes.Add(barcode);
+
+            if (item.Id != default)
+            {
+                barcode.LastScannedAt = DateTime.UtcNow;
+                dbContext.Update(barcode);
+                await dbContext.SaveChangesAsync();
+            }
 
             // TODO: Fix `MinValue` hack - view models?
             transactionItem = new TransactionItem(item.Id, decimal.MinValue, int.MinValue) { Item = item };

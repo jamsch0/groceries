@@ -12,4 +12,5 @@ public class ItemBarcode
     public Guid ItemId { get; init; }
     public long BarcodeData { get; init; }
     public string Format { get; init; }
+    public DateTime LastScannedAt { get; set; }
 }

@@ -33,6 +33,9 @@ public class AppDbContext : DbContext
 
             entity.Property(e => e.Format)
                 .HasDefaultValueSql();
+
+            entity.Property(e => e.LastScannedAt)
+                .HasDefaultValueSql();
         });
 
         modelBuilder.Entity<ItemPurchase>(entity =>
