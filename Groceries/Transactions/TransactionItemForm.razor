@@ -36,34 +36,41 @@
                 <datalist id="itemNames">
                     @foreach (var item in items)
                     {
-                        <option value="@item.Name" data-transaction-item-form-target="option" data-brand="@item.Brand" data-price="@item.Price" data-quantity="@item.Quantity" />
+                        <option value="@item.Name" data-transaction-item-form-target="option" data-brand="@item.Brand" data-price="@item.Price" data-quantity="@(unit == null ? (int?)item.Quantity : item.Quantity)" />
                     }
                 </datalist>
             </div>
         </fieldset>
 
         <div class="form-field">
-            <label class="form-field__label" for="transactionItemPrice">Price</label>
+            <label class="form-field__label" for="transactionItemPrice">
+                Price @if (unit != null) { <text>(per @unit)</text> }
+            </label>
             <div class="form-field__control input">
                 @*<span class="input__inset">@CultureInfo.CurrentCulture.NumberFormat.CurrencySymbol</span>*@
-                <input class="input__control" id="transactionItemPrice" name="price" value="@price" type="number" min="0" step="0.01" required data-transaction-item-form-target="price" />
+                <input class="input__control" id="transactionItemPrice" name="price" value="@price" type="number" min="0" step="0.01" required />
             </div>
         </div>
 
         <div class="form-field">
-            <label class="form-field__label" for="transactionItemQuantity">Quantity</label>
+            <label class="form-field__label" for="transactionItemQuantity">
+                Quantity @if (unit != null) { <text>(@unit)</text> }
+            </label>
             <div class="form-field__control input">
-                <input class="input__control" id="transactionItemQuantity" name="quantity" value="@quantity" type="number" min="1" required data-transaction-item-form-target="quantity" />
+                @{ var step = unit == null ? "1" : "0.001"; }
+                <input class="input__control" id="transactionItemQuantity" name="quantity" value="@quantity" type="number" min="@step" step="@step" required />
             </div>
         </div>
+
+        <input type="hidden" name="unit" value="@unit" />
     </div>
 
     @ChildContent
 </form>
 
 @code {
-    [Parameter]
-    public TransactionItem? TransactionItem { get; set; }
+    [Parameter, EditorRequired]
+    public required TransactionItem TransactionItem { get; set; }
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
@@ -71,7 +78,7 @@
     [Parameter(CaptureUnmatchedValues = true)]
     public Dictionary<string, object>? AdditionalAttributes { get; set; }
 
-    private record ItemModel(Guid Id, string Brand, string Name, decimal? Price, int? Quantity);
+    private record ItemModel(Guid Id, string Brand, string Name, decimal? Price, decimal? Quantity);
 
     private ItemBarcode? barcode;
 
@@ -79,11 +86,12 @@
     private ItemModel? selectedItem;
 
     private decimal? price;
-    private int quantity;
+    private decimal? quantity;
+    private string? unit;
 
     protected override async Task OnParametersSetAsync()
     {
-        barcode = TransactionItem?.Item?.Barcodes.FirstOrDefault();
+        barcode = TransactionItem.Item?.Barcodes.FirstOrDefault();
 
         items = await DbContext.Items
             .OrderBy(item => item.Brand)
@@ -103,9 +111,15 @@
                     lastPurchase != null ? lastPurchase.Quantity : null))
             .ToArrayAsync();
 
-        selectedItem = items.SingleOrDefault(item => item.Id == TransactionItem?.ItemId);
+        selectedItem = items.SingleOrDefault(item => item.Id == TransactionItem.ItemId);
 
-        price = TransactionItem?.Price >= 0 ? TransactionItem.Price : selectedItem?.Price;
-        quantity = TransactionItem?.Quantity >= 1 ? TransactionItem.Quantity : (selectedItem?.Quantity ?? 1);
+        price = TransactionItem.Price >= 0 ? TransactionItem.Price : selectedItem?.Price;
+        quantity = TransactionItem.Quantity >= 0 ? TransactionItem.Quantity : selectedItem?.Quantity;
+        unit = TransactionItem.Unit;
+
+        if (unit == null)
+        {
+            quantity ??= 1;
+        }
     }
 }

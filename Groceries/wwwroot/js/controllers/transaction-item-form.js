@@ -1,7 +1,7 @@
 import { Controller } from "/lib/hotwired/stimulus/dist/stimulus.js";
 
 export default class TransactionItemFormController extends Controller {
-    static targets = ["barcodeButton", "barcodeData", "barcodeFormat", "barcodeFormField", "brand", "option", "price", "quantity"];
+    static targets = ["barcodeButton", "barcodeData", "barcodeFormat", "barcodeFormField", "brand", "option"];
 
     #scanning = false;
     #scanIntervalId;
@@ -35,10 +35,11 @@ export default class TransactionItemFormController extends Controller {
     }
 
     setPriceAndQuantity(event) {
-        const { brand, name } = event.target.form.elements;
+        const { brand, name, price, quantity, unit } = event.target.form.elements;
+
         if (!brand.value || !name.value) {
-            this.priceTarget.value = "";
-            this.quantityTarget.value = "1";
+            price.value = "";
+            quantity.value = !unit.value ? "1" : "";
             return;
         }
 
@@ -47,11 +48,11 @@ export default class TransactionItemFormController extends Controller {
             option.value === name.value);
 
         if (option != null) {
-            if (!this.priceTarget.value) {
-                this.priceTarget.value = option.getAttribute("data-price");
+            if (!price.value) {
+                price.value = option.getAttribute("data-price");
             }
-            if (!this.quantityTarget.value || this.quantityTarget.value === "1") {
-                this.quantityTarget.value = option.getAttribute("data-quantity") || "1";
+            if (quantity.value || (!unit.value && quantity.value === "1")) {
+                quantity.value = option.getAttribute("data-quantity") || (!unit.value ? "1" : "");
             }
         }
     }

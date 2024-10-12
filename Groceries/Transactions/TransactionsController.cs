@@ -60,17 +60,17 @@ public class TransactionsController : Controller
     }
 
     [HttpGet("new/items/new")]
-    public async Task<IResult> NewTransactionItem(long? barcodeData, string? barcodeFormat)
+    public async Task<IResult> NewTransactionItem(string? unit, long? barcodeData, string? barcodeFormat)
     {
         if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
         {
             return Results.LocalRedirect("/transactions/new");
         }
 
-        TransactionItem? transactionItem = null;
+        Item? item = null;
         if (barcodeData != null && barcodeFormat != null)
         {
-            var item = await dbContext.Items
+            item = await dbContext.Items
                 .Where(item => item.Barcodes.Any(barcode => barcode.BarcodeData == barcodeData))
                 .OrderByDescending(item => item.UpdatedAt)
                 .FirstOrDefaultAsync();
@@ -86,10 +86,10 @@ public class TransactionsController : Controller
                 dbContext.Update(barcode);
                 await dbContext.SaveChangesAsync();
             }
-
-            // TODO: Fix `MinValue` hack - view models?
-            transactionItem = new TransactionItem(item.Id, decimal.MinValue, int.MinValue) { Item = item };
         }
+
+        // TODO: Fix `MinValue` hack - view models?
+        var transactionItem = new TransactionItem(item?.Id ?? default, decimal.MinValue, decimal.MinValue, unit) { Item = item };
 
         var parameters = new { Transaction = transaction, TransactionItem = transactionItem };
         return Request.IsTurboFrameRequest("modal")
@@ -98,7 +98,7 @@ public class TransactionsController : Controller
     }
 
     [HttpPost("new/items/new")]
-    public async Task<IResult> NewTransactionItem(string brand, string name, decimal price, int quantity, long? barcodeData, string? barcodeFormat)
+    public async Task<IResult> NewTransactionItem(string brand, string name, decimal price, decimal quantity, string? unit, long? barcodeData, string? barcodeFormat)
     {
         if (TempData.Peek("NewTransaction") is not string json || JsonSerializer.Deserialize<Transaction>(json) is not Transaction transaction)
         {
@@ -127,7 +127,7 @@ public class TransactionsController : Controller
 
         // TODO: Handle item already in transaction - merge, replace, error?
 
-        var transactionItem = new TransactionItem(item.Id, price, quantity) { Item = item };
+        var transactionItem = new TransactionItem(item.Id, price, quantity, unit) { Item = item };
         transaction.Items.Add(transactionItem);
 
         TempData["NewTransaction"] = JsonSerializer.Serialize(transaction);

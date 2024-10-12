@@ -25,7 +25,7 @@
     public required Transaction Transaction { get; set; }
 
     [Parameter]
-    public TransactionItem? TransactionItem { get; set; }
+    public required TransactionItem TransactionItem { get; set; }
 
     private string store = string.Empty;
 

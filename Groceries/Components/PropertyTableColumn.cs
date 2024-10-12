@@ -21,6 +21,9 @@ public class PropertyTableColumn<TItem, TProp> : TableColumn<TItem>
     public string? Format { get; set; }
 
     [Parameter]
+    public Func<TItem, string>? CompositeFormat { get; set; }
+
+    [Parameter]
     public override bool Sortable { get; set; }
 
     public override DataSort<TItem>? SortBy
@@ -55,7 +58,11 @@ public class PropertyTableColumn<TItem, TProp> : TableColumn<TItem>
 
         if (ChildContent == null)
         {
-            if (!string.IsNullOrEmpty(Format) &&
+            if (CompositeFormat != null)
+            {
+                cellTextFunc = item => string.Format(CompositeFormat(item), compiledPropertyExpression(item));
+            }
+            else if (!string.IsNullOrEmpty(Format) &&
                 typeof(IFormattable).IsAssignableFrom(Nullable.GetUnderlyingType(typeof(TProp)) ?? typeof(TProp)))
             {
                 cellTextFunc = item => ((IFormattable?)compiledPropertyExpression(item))?.ToString(Format, null);

@@ -51,7 +51,7 @@
                     CreatedAt = transaction.CreatedAt,
                     Store = string.Concat(transaction.Store!.Retailer!.Name, " ", transaction.Store.Name),
                     TotalAmount = transactionTotal.Total,
-                    TotalItems = transaction.Items.Sum(item => item.Quantity),
+                    TotalItems = transaction.Items.Sum(item => item.Unit == null ? (int)item.Quantity : 1),
                 })
             .OrderByDescending(transaction => transaction.CreatedAt);
     }

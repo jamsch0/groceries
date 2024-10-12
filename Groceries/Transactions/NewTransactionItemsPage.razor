@@ -16,9 +16,19 @@
     <section class="card form-field">
         <div class="card__header row">
             <h2 class="row__fill">Items</h2>
-            <a class="button button--primary" href="/transactions/new/items/new" autofocus data-turbo-frame="modal">
-                New item
-            </a>
+            <div class="button-group dropdown">
+                <a class="button button--primary" href="/transactions/new/items/new" autofocus data-turbo-frame="modal">
+                    New item
+                </a>
+                <button class="button button--primary dropdown__toggle" type="button" popovertarget="newItemMenu"></button>
+                <ul class="dropdown__menu" id="newItemMenu" popover>
+                    <li>
+                        <a class="button dropdown__item" href="/transactions/new/items/new?unit=kg" data-turbo-frame="modal">
+                            New loose item
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
 
         <div class="card__content card__content--table">
@@ -27,8 +37,8 @@
                     <TemplateTableColumn Title="Name" Fill="true" Context="item">
                         @itemNames.GetValueOrDefault(item.ItemId)
                     </TemplateTableColumn>
-                    <PropertyTableColumn Property="i => i.Price" Format="c" />
-                    <PropertyTableColumn Property="i => i.Quantity">
+                    <PropertyTableColumn Property="i => i.Price" CompositeFormat='i => i.Unit == null ? "{0:c}" : ("{0:c}/" + i.Unit)' />
+                    <PropertyTableColumn Property="i => i.Quantity" CompositeFormat='i => i.Unit == null ? "{0:f0}" : ("{0:f3}" + i.Unit)'>
                         <HeaderContent>
                             <abbr title="Quantity">Qty</abbr>
                         </HeaderContent>
