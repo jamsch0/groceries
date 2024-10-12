@@ -8,11 +8,11 @@ using Microsoft.EntityFrameworkCore;
 [Route("/stores")]
 public class StoresController : Controller
 {
-    private readonly AppDbContext dbContext;
+    private readonly IDbContextFactory<AppDbContext> dbContextFactory;
 
-    public StoresController(AppDbContext dbContext)
+    public StoresController(IDbContextFactory<AppDbContext> dbContextFactory)
     {
-        this.dbContext = dbContext;
+        this.dbContextFactory = dbContextFactory;
     }
 
     [HttpGet]
@@ -32,6 +32,8 @@ public class StoresController : Controller
     [HttpPost("new")]
     public async Task<IResult> NewStore(Guid retailerId, string name, string? address)
     {
+        using var dbContext = dbContextFactory.CreateDbContext();
+
         var store = new Store(retailerId, name, address);
         dbContext.Stores.Add(store);
 
@@ -45,6 +47,8 @@ public class StoresController : Controller
     [HttpGet("edit/{id}")]
     public async Task<IResult> EditStore(Guid id)
     {
+        using var dbContext = dbContextFactory.CreateDbContext();
+
         var store = await dbContext.Stores
             .SingleOrDefaultAsync(store => store.Id == id, HttpContext.RequestAborted);
 
@@ -61,6 +65,8 @@ public class StoresController : Controller
     [HttpPost("edit/{id}")]
     public async Task<IResult> EditStore(Guid id, Guid retailerId, string name, string? address, string? returnUrl)
     {
+        using var dbContext = dbContextFactory.CreateDbContext();
+
         var store = new Store(id, retailerId, name, address);
         dbContext.Stores.Update(store);
 

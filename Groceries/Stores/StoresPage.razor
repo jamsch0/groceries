@@ -2,7 +2,9 @@
 @using Microsoft.EntityFrameworkCore
 
 @layout Layout
-@inject AppDbContext DbContext
+
+@implements IDisposable
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 
 <PageTitle>Groceries &ndash; Stores</PageTitle>
 
@@ -39,6 +41,7 @@
         public int TransactionsCount { get; init; }
     }
 
+    private AppDbContext? dbContext;
     private IQueryable<StoreModel> stores = null!;
     private PaginationState pagination = new();
 
@@ -47,7 +50,9 @@
 
     protected override void OnParametersSet()
     {
-        var storesQuery = DbContext.Stores.AsQueryable();
+        dbContext ??= DbContextFactory.CreateDbContext();
+
+        var storesQuery = dbContext.Stores.AsQueryable();
         if (!string.IsNullOrEmpty(Search))
         {
             var searchPattern = $"%{Search}%";
@@ -65,5 +70,10 @@
             })
             .OrderBy(store => store.Retailer)
             .ThenBy(store => store.Name);
+    }
+
+    public void Dispose()
+    {
+        dbContext?.Dispose();
     }
 }

@@ -3,7 +3,7 @@
 
 @layout Layout
 
-@inject AppDbContext DbContext
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 
 <PageTitle>Groceries &ndash; Edit Transaction Item</PageTitle>
 
@@ -19,7 +19,7 @@
 
 <div class="row">
     <button class="button button--primary" type="submit" form="editTransactionItem">Update</button>
-    <a class="button" href="/transaction/new/items">Cancel</a>
+    <a class="button" href="/transactions/new/items">Cancel</a>
     <span class="row__fill"></span>
     <button class="button button--danger" type="submit" form="deleteTransactionItem">Remove</button>
 </div>
@@ -35,7 +35,8 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        store = await DbContext.Stores
+        using var dbContext = DbContextFactory.CreateDbContext();
+        store = await dbContext.Stores
             .Where(store => store.Id == Transaction.StoreId)
             .Select(store => string.Concat(store.Retailer!.Name, " ", store.Name))
             .SingleAsync();

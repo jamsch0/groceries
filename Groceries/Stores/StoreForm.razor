@@ -1,7 +1,7 @@
 @using Groceries.Data
 @using Microsoft.EntityFrameworkCore
 
-@inject AppDbContext DbContext
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 
 <form method="post" @attributes="AdditionalAttributes">
     <div class="form-field">
@@ -45,7 +45,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        retailers = await DbContext.Retailers
+        using var dbContext = DbContextFactory.CreateDbContext();
+        retailers = await dbContext.Retailers
             .OrderBy(retailer => retailer.Name)
             .ToArrayAsync();
     }

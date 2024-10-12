@@ -1,7 +1,10 @@
 @using Groceries.Data
+@using Microsoft.EntityFrameworkCore
 
 @layout Layout
-@inject AppDbContext DbContext
+
+@implements IDisposable
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 
 <PageTitle>Groceries &ndash; Transactions</PageTitle>
 
@@ -35,14 +38,16 @@
         public int TotalItems { get; init; }
     }
 
+    private AppDbContext? dbContext;
     private IQueryable<TransactionModel> transactions = null!;
     private PaginationState pagination = new();
 
     protected override void OnParametersSet()
     {
-        transactions = DbContext.Transactions
+        dbContext ??= DbContextFactory.CreateDbContext();
+        transactions = dbContext.Transactions
             .Join(
-                DbContext.TransactionTotals,
+                dbContext.TransactionTotals,
                 transaction => transaction.Id,
                 transactionTotal => transactionTotal.TransactionId,
                 (transaction, transactionTotal) => new TransactionModel
@@ -54,5 +59,10 @@
                     TotalItems = transaction.Items.Sum(item => item.Unit == null ? (int)item.Quantity : 1),
                 })
             .OrderByDescending(transaction => transaction.CreatedAt);
+    }
+
+    public void Dispose()
+    {
+        dbContext?.Dispose();
     }
 }

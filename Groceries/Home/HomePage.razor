@@ -4,7 +4,7 @@
 
 @layout Layout
 
-@inject AppDbContext DbContext
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHttpContextAccessor HttpContextAccessor
 
 <HeadContent>
@@ -52,7 +52,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        model = await DbContext.ItemTagQuantities
+        using var dbContext = DbContextFactory.CreateDbContext();
+        model = await dbContext.ItemTagQuantities
             .FromSqlRaw(@"
                 SELECT tag, quantity, coalesce(unit_name, unit) AS unit, is_metric, is_divisible
                 FROM (

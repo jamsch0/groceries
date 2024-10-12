@@ -2,7 +2,8 @@
 @using Microsoft.EntityFrameworkCore
 
 @layout Layout
-@inject AppDbContext DbContext
+
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 
 <PageTitle>Groceries &ndash; New Transaction</PageTitle>
 
@@ -78,13 +79,15 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        store = await DbContext.Stores
+        using var dbContext = DbContextFactory.CreateDbContext();
+
+        store = await dbContext.Stores
             .Where(store => store.Id == Transaction.StoreId)
             .Select(store => string.Concat(store.Retailer!.Name, " ", store.Name))
             .SingleAsync();
 
         var itemIds = Transaction.Items.Select(item => item.ItemId);
-        itemNames = await DbContext.Items
+        itemNames = await dbContext.Items
             .Where(item => itemIds.Contains(item.Id))
             .ToDictionaryAsync(item => item.Id, item => string.Concat(item.Brand, " ", item.Name));
     }

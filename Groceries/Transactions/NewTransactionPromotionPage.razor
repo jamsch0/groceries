@@ -3,7 +3,7 @@
 
 @layout Layout
 
-@inject AppDbContext DbContext
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 
 <PageTitle>Groceries &ndash; New Transaction Promotion</PageTitle>
 
@@ -28,7 +28,8 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        store = await DbContext.Stores
+        using var dbContext = DbContextFactory.CreateDbContext();
+        store = await dbContext.Stores
             .Where(store => store.Id == Transaction.StoreId)
             .Select(store => string.Concat(store.Retailer!.Name, " ", store.Name))
             .SingleAsync();

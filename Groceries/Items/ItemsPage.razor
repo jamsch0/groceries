@@ -2,7 +2,9 @@
 @using Microsoft.EntityFrameworkCore
 
 @layout Layout
-@inject AppDbContext DbContext
+
+@implements IDisposable
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 
 <PageTitle>Groceries &ndash; Items</PageTitle>
 
@@ -44,6 +46,7 @@
         public DateTime? LastPurchasedAt { get; init; }
     }
 
+    private AppDbContext? dbContext;
     private IQueryable<ItemModel> items = null!;
     private PaginationState pagination = new();
 
@@ -52,7 +55,9 @@
 
     protected override void OnParametersSet()
     {
-        var itemsQuery = DbContext.Items.AsQueryable();
+        dbContext ??= DbContextFactory.CreateDbContext();
+
+        var itemsQuery = dbContext.Items.AsQueryable();
         if (!string.IsNullOrEmpty(Search))
         {
             var searchPattern = $"%{Search}%";
@@ -61,7 +66,7 @@
 
         items = itemsQuery
             .GroupJoin(
-                DbContext.ItemPurchases.Where(purchase => purchase.IsLastPurchase),
+                dbContext.ItemPurchases.Where(purchase => purchase.IsLastPurchase),
                 item => item.Id,
                 purchase => purchase.ItemId,
                 (item, purchases) => new { item, purchases })
@@ -77,5 +82,10 @@
                 })
             .OrderBy(item => item.Brand)
             .ThenBy(item => item.Name);
+    }
+
+    public void Dispose()
+    {
+        dbContext?.Dispose();
     }
 }

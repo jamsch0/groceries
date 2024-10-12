@@ -3,7 +3,7 @@
 
 @layout Layout
 
-@inject AppDbContext DbContext
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 
 <PageTitle>Groceries &ndash; New Transaction</PageTitle>
 
@@ -41,7 +41,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        stores = await DbContext.Stores
+        using var dbContext = DbContextFactory.CreateDbContext();
+        stores = await dbContext.Stores
             .OrderBy(store => store.Retailer!.Name)
             .ThenBy(store => store.Name)
             .Select(store => new StoreModel(store.Id, string.Concat(store.Retailer!.Name, " ", store.Name)))

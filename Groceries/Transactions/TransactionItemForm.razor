@@ -1,7 +1,7 @@
 @using Groceries.Data
 @using Microsoft.EntityFrameworkCore
 
-@inject AppDbContext DbContext
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 
 <form method="post" @attributes="AdditionalAttributes">
     @* Ensure form action/method are used for implicit submission instead of barcode button *@
@@ -93,11 +93,12 @@
     {
         barcode = TransactionItem.Item?.Barcodes.FirstOrDefault();
 
-        items = await DbContext.Items
+        using var dbContext = DbContextFactory.CreateDbContext();
+        items = await dbContext.Items
             .OrderBy(item => item.Brand)
             .ThenBy(item => item.Name)
             .GroupJoin(
-                DbContext.ItemPurchases.Where(purchase => purchase.IsLastPurchase),
+                dbContext.ItemPurchases.Where(purchase => purchase.IsLastPurchase),
                 item => item.Id,
                 lastPurchase => lastPurchase.ItemId,
                 (item, purchases) => new { item, purchases })

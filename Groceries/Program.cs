@@ -42,7 +42,7 @@ builder.Services.AddDistributedMemoryCache();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSession();
 
-builder.Services.AddDbContextPool<AppDbContext>(options => options
+builder.Services.AddPooledDbContextFactory<AppDbContext>(options => options
     .EnableDetailedErrors(env.IsDevelopment())
     .EnableSensitiveDataLogging(env.IsDevelopment())
     .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)

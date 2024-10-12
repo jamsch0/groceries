@@ -9,11 +9,11 @@ using System.Text.Json;
 [Route("/transactions")]
 public class TransactionsController : Controller
 {
-    private readonly AppDbContext dbContext;
+    private readonly IDbContextFactory<AppDbContext> dbContextFactory;
 
-    public TransactionsController(AppDbContext dbContext)
+    public TransactionsController(IDbContextFactory<AppDbContext> dbContextFactory)
     {
-        this.dbContext = dbContext;
+        this.dbContextFactory = dbContextFactory;
     }
 
     [HttpGet]
@@ -70,6 +70,8 @@ public class TransactionsController : Controller
         Item? item = null;
         if (barcodeData != null && barcodeFormat != null)
         {
+            using var dbContext = dbContextFactory.CreateDbContext();
+
             item = await dbContext.Items
                 .Where(item => item.Barcodes.Any(barcode => barcode.BarcodeData == barcodeData))
                 .OrderByDescending(item => item.UpdatedAt)
@@ -104,6 +106,8 @@ public class TransactionsController : Controller
         {
             return Results.LocalRedirect("/transactions/new");
         }
+
+        using var dbContext = dbContextFactory.CreateDbContext();
 
         var itemId = await dbContext.Items
             .Where(item => EF.Functions.ILike(item.Brand, brand) && EF.Functions.ILike(item.Name, name))
@@ -171,6 +175,8 @@ public class TransactionsController : Controller
             return Results.LocalRedirect("/transactions/new/items");
         }
 
+        using var dbContext = dbContextFactory.CreateDbContext();
+
         var itemId = await dbContext.Items
             .Where(item => EF.Functions.ILike(item.Brand, brand) && EF.Functions.ILike(item.Name, name))
             .Select(item => item.Id)
@@ -234,6 +240,8 @@ public class TransactionsController : Controller
         {
             return Results.LocalRedirect("/transactions/new");
         }
+
+        using var dbContext = dbContextFactory.CreateDbContext();
 
         // Work around EF trying to insert items by explicitly tracking them as unchanged
         dbContext.Items.AttachRange(
