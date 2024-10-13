@@ -243,11 +243,13 @@ public class TransactionsController : Controller
 
         using var dbContext = dbContextFactory.CreateDbContext();
 
+        foreach (var item in transaction.Items)
+        {
+            item.Item = null;
+        }
+
         // Work around EF trying to insert items by explicitly tracking them as unchanged
-        dbContext.Items.AttachRange(
-            transaction.Items
-                .Select(item => item.Item!)
-                .Concat(transaction.Promotions.SelectMany(promotion => promotion.Items)));
+        dbContext.Items.AttachRange(transaction.Promotions.SelectMany(promotion => promotion.Items));
 
         dbContext.Transactions.Add(transaction);
         await dbContext.SaveChangesAsync();
