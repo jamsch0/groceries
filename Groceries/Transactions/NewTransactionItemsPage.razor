@@ -33,10 +33,10 @@
         </div>
 
         <div class="card__content card__content--table">
-            <Table Items="Transaction.Items.AsQueryable()" CellClass="table__cell--compact">
+            <Table Items="Transaction.Items.AsQueryable()" HeaderClass="table__header--compact" CellClass="table__cell--compact">
                 <ChildContent>
                     <TemplateTableColumn Title="Name" Fill="true" Context="item">
-                        @itemNames.GetValueOrDefault(item.ItemId)
+                        <div class="line-clamp-4">@itemNames.GetValueOrDefault(item.ItemId)</div>
                     </TemplateTableColumn>
                     <PropertyTableColumn Property="i => i.Price" CompositeFormat='i => i.Unit == null ? "{0:c}" : ("{0:c}/" + i.Unit)' />
                     <PropertyTableColumn Property="i => i.Quantity" CompositeFormat='i => i.Unit == null ? "{0:f0}" : ("{0:f3}" + i.Unit)'>

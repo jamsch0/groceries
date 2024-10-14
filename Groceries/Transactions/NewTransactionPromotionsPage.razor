@@ -23,7 +23,7 @@
         </header>
 
         <div class="card__content card__content--table">
-            <Table Items="Transaction.Promotions.AsQueryable()" CellClass="table__cell--compact">
+            <Table Items="Transaction.Promotions.AsQueryable()" HeaderClass="table__header--compact" CellClass="table__cell--compact">
                 <ChildContent>
                     <PropertyTableColumn Property="p => p.Name" Fill="true" />
                     <TemplateTableColumn Title="Items" Align="Align.End" Context="promotion">

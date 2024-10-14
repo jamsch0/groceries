@@ -69,6 +69,14 @@ h1, h2, h3, h4, h5, h6 {
     flex: 5;
 }
 
+.line-clamp-4 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    white-space: initial;
+}
+
 .row {
     display: flex;
     align-items: baseline;
@@ -312,6 +320,12 @@ html:has(.modal[open]) {
     border-color: transparent;
 }
 
+@media (max-width: 40rem) {
+    .card__header, .card__footer {
+        padding-inline: 1rem;
+    }
+}
+
 /* Table */
 
 .table {
@@ -374,15 +388,15 @@ html:has(.modal[open]) {
     white-space: nowrap;
 }
 
-.table__cell--align-center {
+.table__header--align-center, .table__cell--align-center {
     text-align: center;
 }
 
-.table__cell--align-end {
+.table__header--align-end, .table__cell--align-end {
     text-align: end;
 }
 
-.table__cell--compact {
+.table__header--compact, .table__cell--compact {
     line-height: 1rem;
     padding-block: 0.75rem;
 }
@@ -406,6 +420,24 @@ html:has(.modal[open]) {
 .table__paginator > nav {
     display: flex;
     gap: 1rem;
+}
+
+@media (max-width: 40rem) {
+    .table__header, .table__cell {
+        padding-inline: 1rem;
+    }
+
+    .table__header--compact, .table__cell--compact {
+        font-size: 0.75rem;
+    }
+
+    .table__header--compact:not(:first-child), .table__cell--compact:not(:first-child) {
+        padding-inline-start: 0.5rem;
+    }
+
+    .table__header--compact:not(:last-child), .table__cell--compact:not(:last-child) {
+        padding-inline-end: 0.5rem;
+    }
 }
 
 /*@media (prefers-color-scheme: dark) {

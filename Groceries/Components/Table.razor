@@ -176,6 +176,12 @@
     {
         string?[] classes = [
             "table__header",
+            column.Align switch
+            {
+                Align.Center => "table__header--align-center",
+                Align.End => "table__header--align-end",
+                _ => null,
+            },
             column.Sortable ? "table__header--sortable" : null,
             HeaderClass,
         ];
