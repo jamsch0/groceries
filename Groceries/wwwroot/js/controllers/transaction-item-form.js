@@ -51,7 +51,7 @@ export default class TransactionItemFormController extends Controller {
             if (!price.value) {
                 price.value = option.getAttribute("data-price");
             }
-            if (quantity.value || (!unit.value && quantity.value === "1")) {
+            if (!quantity.value || (!unit.value && quantity.value === "1")) {
                 quantity.value = option.getAttribute("data-quantity") || (!unit.value ? "1" : "");
             }
         }
