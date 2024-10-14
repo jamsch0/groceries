@@ -58,7 +58,7 @@
             </label>
             <div class="form-field__control input">
                 @{ var step = unit == null ? "1" : "0.001"; }
-                <input class="input__control" id="transactionItemQuantity" name="quantity" value="@quantity" type="number" min="@step" step="@step" required />
+                <input class="input__control" id="transactionItemQuantity" name="quantity" value="@(unit == null ? (int?)quantity : quantity)" type="number" min="@step" step="@step" required />
             </div>
         </div>
 
