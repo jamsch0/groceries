@@ -3,11 +3,11 @@
     "defaultProvider": "unpkg",
     "libraries": [
         {
-            "library": "@fontsource-variable/inter@5.1.1",
+            "library": "@fontsource-variable/inter@5.2.5",
             "destination": "wwwroot/lib/inter/"
         },
         {
-            "library": "@hotwired/turbo@8.0.12",
+            "library": "@hotwired/turbo@8.0.13",
             "destination": "wwwroot/lib/hotwired/turbo/"
         },
         {

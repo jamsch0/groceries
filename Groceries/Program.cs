@@ -1,4 +1,5 @@
 using DbUp;
+using DbUp.Engine.Output;
 using Groceries.Data;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
@@ -13,20 +14,6 @@ builder.Configuration
     .AddIniFile(Path.Combine(dataDir, $"config_{env.EnvironmentName}.ini"), optional: true, reloadOnChange: true);
 
 var dbConn = builder.Configuration["Database"]!;
-EnsureDatabase.For.PostgresqlDatabase(dbConn);
-
-var dbUpgradeResult = DeployChanges.To
-    .PostgresqlDatabase(dbConn)
-    .JournalToPostgresqlTable("public", "__dbup_migrations")
-    .WithScriptsEmbeddedInAssembly(typeof(AppDbContext).Assembly)
-    .WithTransactionPerScript()
-    .Build()
-    .PerformUpgrade();
-
-if (!dbUpgradeResult.Successful)
-{
-    return -1;
-}
 
 var dataProtection = builder.Services.AddDataProtection();
 if (env.IsProduction())
@@ -58,6 +45,22 @@ app.MapStaticAssets();
 app.MapControllers()
     .WithStaticAssets();
 
-await app.RunAsync();
+var dbUpgradeLogger = new MicrosoftUpgradeLog(app.Logger);
+EnsureDatabase.For.PostgresqlDatabase(dbConn, dbUpgradeLogger);
 
-return 0;
+var dbUpgradeResult = DeployChanges.To
+    .PostgresqlDatabase(dbConn)
+    .JournalToPostgresqlTable("public", "__dbup_migrations")
+    .WithScriptsEmbeddedInAssembly(typeof(AppDbContext).Assembly)
+    .WithTransactionPerScript()
+    .LogTo(dbUpgradeLogger)
+    .Build()
+    .PerformUpgrade();
+
+if (!dbUpgradeResult.Successful)
+{
+    Environment.Exit(-1);
+    return;
+}
+
+app.Run();
