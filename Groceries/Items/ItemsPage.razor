@@ -65,19 +65,16 @@
         }
 
         items = itemsQuery
-            .GroupJoin(
+            .LeftJoin(
                 dbContext.ItemPurchases.Where(purchase => purchase.IsLastPurchase),
                 item => item.Id,
                 purchase => purchase.ItemId,
-                (item, purchases) => new { item, purchases })
-            .SelectMany(
-                group => group.purchases.DefaultIfEmpty(),
-                (group, lastPurchase) => new ItemModel
+                (item, lastPurchase) => new ItemModel
                 {
-                    Id = group.item.Id,
-                    Brand = group.item.Brand,
-                    Name = group.item.Name,
-                    HasBarcode = group.item.Barcodes.Count != 0,
+                    Id = item.Id,
+                    Brand = item.Brand,
+                    Name = item.Name,
+                    HasBarcode = item.Barcodes.Count > 0,
                     LastPurchasedAt = lastPurchase != null ? lastPurchase.CreatedAt : null,
                 })
             .OrderBy(item => item.Brand)

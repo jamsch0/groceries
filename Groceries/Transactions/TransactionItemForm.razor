@@ -97,17 +97,14 @@
         items = await dbContext.Items
             .OrderBy(item => item.Brand)
             .ThenBy(item => item.Name)
-            .GroupJoin(
+            .LeftJoin(
                 dbContext.ItemPurchases.Where(purchase => purchase.IsLastPurchase),
                 item => item.Id,
                 lastPurchase => lastPurchase.ItemId,
-                (item, purchases) => new { item, purchases })
-            .SelectMany(
-                group => group.purchases.DefaultIfEmpty(),
-                (group, lastPurchase) => new ItemModel(
-                    group.item.Id,
-                    group.item.Brand,
-                    group.item.Name,
+                (item, lastPurchase) => new ItemModel(
+                    item.Id,
+                    item.Brand,
+                    item.Name,
                     lastPurchase != null ? lastPurchase.Price : null,
                     lastPurchase != null ? lastPurchase.Quantity : null))
             .ToArrayAsync();

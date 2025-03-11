@@ -32,10 +32,10 @@ public static class HttpRequestExtensions
         return origin.IsBaseOf(uri);
     }
 
-    public static Uri? GetRefererIfSameOrigin(this HttpRequest request)
+    public static Uri? GetReferrerIfSameOrigin(this HttpRequest request)
     {
-        var referer = request.GetTypedHeaders().Referer;
-        return referer != null && request.IsSameOrigin(referer) ? referer : null;
+        var referrer = request.GetTypedHeaders().Referer;
+        return referrer != null && request.IsSameOrigin(referrer) ? referrer : null;
     }
 
     public static bool IsTurboFrameRequest(this HttpRequest request, string frameId)

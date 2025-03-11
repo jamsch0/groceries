@@ -24,9 +24,9 @@
     protected override void OnInitialized()
     {
         var request = HttpContextAccessor.HttpContext!.Request;
-        if (request.GetRefererIfSameOrigin() is Uri referer && referer != request.GetUri())
+        if (request.GetReferrerIfSameOrigin() is Uri referrer && referrer != request.GetUri())
         {
-            returnUrl = referer.PathAndQuery;
+            returnUrl = referrer.PathAndQuery;
         }
     }
 }
