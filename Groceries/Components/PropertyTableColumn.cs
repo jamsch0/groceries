@@ -2,6 +2,7 @@ namespace Groceries.Components;
 
 using Humanizer;
 using Microsoft.AspNetCore.Components;
+using System.Globalization;
 using System.Linq.Expressions;
 
 public class PropertyTableColumn<TItem, TProp> : TableColumn<TItem>
@@ -60,12 +61,16 @@ public class PropertyTableColumn<TItem, TProp> : TableColumn<TItem>
         {
             if (CompositeFormat != null)
             {
-                cellTextFunc = item => string.Format(CompositeFormat(item), compiledPropertyExpression(item));
+                cellTextFunc = item => string.Format(
+                    CultureInfo.CurrentCulture,
+                    CompositeFormat(item),
+                    compiledPropertyExpression(item));
             }
             else if (!string.IsNullOrEmpty(Format) &&
                 typeof(IFormattable).IsAssignableFrom(Nullable.GetUnderlyingType(typeof(TProp)) ?? typeof(TProp)))
             {
-                cellTextFunc = item => ((IFormattable?)compiledPropertyExpression(item))?.ToString(Format, null);
+                cellTextFunc = item => ((IFormattable?)compiledPropertyExpression(item))
+                    ?.ToString(Format, CultureInfo.CurrentCulture);
             }
             else
             {
