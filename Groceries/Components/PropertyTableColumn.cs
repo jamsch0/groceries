@@ -40,10 +40,12 @@ public class PropertyTableColumn<TItem, TProp> : TableColumn<TItem>
 
     protected override void OnParametersSet()
     {
-        if (Title is null && Property.Body is MemberExpression memberExpression)
+        if (Property.Body is not MemberExpression memberExpression)
         {
-            Title = memberExpression.Member.Name;
+            throw new InvalidOperationException("Property must be a simple field/property access expression");
         }
+
+        Title ??= memberExpression.Member.Name;
         if (Align is null && (typeof(TProp) == typeof(int) || typeof(TProp) == typeof(decimal)))
         {
             Align = Components.Align.End;
