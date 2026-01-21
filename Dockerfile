@@ -13,7 +13,7 @@ RUN dotnet libman restore
 FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build2
 
 WORKDIR /src
-COPY ./Groceries.sln ./
+COPY ./Groceries.slnx ./
 COPY ./Directory.Build.props ./
 
 COPY --parents */*.csproj .
