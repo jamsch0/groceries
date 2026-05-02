@@ -7,11 +7,16 @@
         <WarningsAsErrors>nullable</WarningsAsErrors>
         <AnalysisMode>recommended</AnalysisMode>
 
+        <PublishIISAssets>false</PublishIISAssets>
         <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     </PropertyGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\Groceries.Data\Groceries.Data.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Remove="libman.json" />
     </ItemGroup>
 
 </Project>

@@ -1,5 +1,5 @@
 .git/
-.github/
+.gitea/
 .vs/
 .vscode/
 artifacts/
@@ -7,3 +7,4 @@ artifacts/
 
 Groceries/wwwroot/lib/
 Groceries/config_development.ini
+README.md
