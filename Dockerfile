@@ -23,7 +23,7 @@ COPY . ./
 COPY --from=build1 /src ./
 RUN dotnet publish --no-restore --output /out
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine-composite AS base
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine3.24-composite AS base
 WORKDIR /groceries
 
 COPY --from=build2 /out .
